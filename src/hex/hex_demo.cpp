@@ -1,6 +1,10 @@
+#include "imgui.h"
+#include "imgui-SFML.h"
+#include "implot.h"
+
 #include "hex.hh"
-#include "sfml_hex.hh"
-#include "imgui_hex.hh"
+#include "hex_sfml.hh"
+#include "hex_imgui.hh"
 
 
 #include <SFML/Graphics.hpp>

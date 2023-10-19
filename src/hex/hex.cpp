@@ -1,12 +1,19 @@
 #include "hex.hh"
 
-#include <algorithm>
 
+#include <algorithm>
+#include <cassert>
+#include <cmath>
+
+
+#define SQRT_OF_3 (1.73205080757)
 
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
+
+
 
 
 static const std::array<hex::Coord, 6> coord_directions = {hex::Coord( 1,  0, -1),  // East
@@ -24,8 +31,11 @@ static const std::array<hex::Coord, 6> coord_diagonals = {hex::Coord( 2, -1, -1)
                                                           hex::Coord( 1,  1, -2)}; // Est - SouthEast
 
 
+
+
 namespace hex
 {
+
 
 const Layout::Orientation Layout::orientation = Layout::Orientation(SQRT_OF_3,
                                                                     SQRT_OF_3 / 2.0,
@@ -36,6 +46,7 @@ const Layout::Orientation Layout::orientation = Layout::Orientation(SQRT_OF_3,
                                                                     0.0,
                                                                     2.0 / 3.0,
                                                                     0.5);
+
 
 Layout::Layout(double s_x, double s_y, double o_x, double o_y)
 : size_x(s_x)
@@ -61,6 +72,7 @@ Layout default_layout(100 / SQRT_OF_3, 100 / 2, 0, 0);
 
 
 
+
 /*******************************************************************************
                       ___                __  _                 __
                  ____/ (_)_______  _____/ /_(_)___  ____      / /_
@@ -75,21 +87,22 @@ Layout default_layout(100 / SQRT_OF_3, 100 / 2, 0, 0);
 
 
 
-std::string hex::encode_direction(hex::direction_t d)
+std::string const & hex::encode_direction(hex::direction_t d)
 {
-	if (d == direction_t::East)
-		return ("  e ");
-	if (d == direction_t::NorthEast)
-		return (" ne ");
-	if (d == direction_t::NorthWest)
-		return (" nw ");
-	if (d == direction_t::West)
-		return ("  w ");
-	if (d == direction_t::SouthEast)
-		return (" se ");
-	if (d == direction_t::SouthWest)
-		return (" sw ");
-	return (std::string());
+	static const std::array<std::string, 7> ref
+	{
+		"e",
+		"ne",
+		"nw",
+		"w",
+		"se",
+		"sw",
+		""
+	};
+
+	std::size_t idx = std::min(static_cast<std::size_t>(d),
+	                           static_cast<std::size_t>(hex::direction_t::__MAX));
+	return (ref[idx]);
 }
 
 std::string hex::encode_direction(std::bitset<6> dirs)
@@ -99,19 +112,9 @@ std::string hex::encode_direction(std::bitset<6> dirs)
 	if (dirs.count() == 0)
 		return (res);
 
-	if (dirs.test((std::size_t)(direction_t::East)))
-		res += "  e ";
-	if (dirs.test((std::size_t)(direction_t::NorthEast)))
-		res += " ne ";
-	if (dirs.test((std::size_t)(direction_t::NorthWest)))
-		res += " nw ";
-	if (dirs.test((std::size_t)(direction_t::West)))
-		res += "  w ";
-	if (dirs.test((std::size_t)(direction_t::SouthEast)))
-		res += " se ";
-	if (dirs.test((std::size_t)(direction_t::SouthWest)))
-		res += " sw ";
-
+	for (std::size_t i = 0; i < 6; ++i)
+		if (dirs.test(i))
+			res += encode_direction(static_cast<hex::direction_t>(i));
 	return (res);
 }
 
@@ -172,7 +175,8 @@ std::string const & to_string(hex::direction_t d)
 	  "West",
 	  "SouthWest",
 	  "SouthEast",
-	  "Unknown" };
+	  "Unknown"
+	};
 
 	std::size_t idx = std::min(static_cast<std::size_t>(d), __max);
 	return (tmp[idx]);
@@ -210,7 +214,7 @@ std::ostream & operator<<(std::ostream & os, hex::direction_t d)
 
 
 hex::Coord::Coord(int q, int r)
-: Coord(q, r, -(q + r))
+: Coord(q, r, -q - r)
 {}
 
 hex::Coord::Coord(int q, int r, int s)
@@ -259,14 +263,6 @@ hex::Coord::Coord(DoubledCoord const & oth)
 {
   assert(m_q + m_r + m_s == 0);
 }
-
-hex::Coord::Coord(sf::Vector2f const & p)
-: Coord(FractionalCoord(p))
-{}
-
-hex::Coord::Coord(Layout const & layout, sf::Vector2f const & p)
-: Coord(FractionalCoord(layout, p))
-{}
 
 
 
@@ -418,129 +414,6 @@ int hex::Coord::distance(Coord const & oth) const
 
 
 
-sf::Vector2f hex::Coord::to_pixel() const
-{
-	return (to_pixel(default_layout));
-}
-
-void hex::Coord::to_pixel(std::array<sf::Vector2f, 6> & result) const
-{
-	return (to_pixel(default_layout, result));
-}
-
-void hex::Coord::to_pixel(std::vector<sf::Vector2f> & result) const
-{
-	return (to_pixel(default_layout, result));
-}
-
-
-
-sf::Vector2f hex::Coord::to_pixel(Layout const & layout) const
-{
-  double x = (layout.orientation.f0 * m_q + layout.orientation.f1 * m_r) * layout.size_x;
-  double y = (layout.orientation.f2 * m_q + layout.orientation.f3 * m_r) * layout.size_y;
-
-	return (sf::Vector2f(x + layout.origin_x, y + layout.origin_y));
-}
-
-void hex::Coord::to_pixel(Layout const & layout, std::array<sf::Vector2f, 6> & result) const
-{
-	sf::Vector2f center = to_pixel(layout);
-	for (int i = 0; i < 6; ++i)
-		result[i] = corner(layout, i) + center;
-}
-
-void hex::Coord::to_pixel(Layout const & layout, std::vector<sf::Vector2f> & result) const
-{
-	sf::Vector2f center = to_pixel(layout);
-	for (int i = 0; i < 6; ++i)
-		result.emplace_back(corner(layout, i) + center);
-}
-
-
-
-
-
-
-
-sf::Vector2f hex::Coord::corner(int corner)
-{
-	return (hex::Coord::corner(default_layout, corner));
-}
-
-
-void hex::Coord::corner(std::array<sf::Vector2f, 6> & result)
-{
-	return (hex::Coord::corner(default_layout, result));
-}
-
-void hex::Coord::corner(std::vector<sf::Vector2f> & result)
-{
-	return (hex::Coord::corner(default_layout, result));
-}
-
-
-
-sf::Vector2f hex::Coord::corner(Layout const & layout, int corner)
-{
-	return (layout.corners[corner]);
-}
-
-
-void hex::Coord::corner(Layout const & layout, std::array<sf::Vector2f, 6> & result)
-{
-	for (int i = 0; i < 6; ++i)
-		result[i] = corner(layout, i);
-}
-
-void hex::Coord::corner(Layout const & layout, std::vector<sf::Vector2f> & result)
-{
-	for (int i = 0; i < 6; ++i)
-		result.emplace_back(corner(layout, i));
-}
-
-
-
-
-
-
-
-void hex::Coord::vertice(int dir, sf::Vector2f * result)
-{
-	vertice(default_layout, dir, result);
-}
-
-void hex::Coord::vertice(direction_t dir, sf::Vector2f * result)
-{
-	vertice(default_layout, static_cast<int>(dir), result);
-}
-
-
-
-void hex::Coord::vertice(Layout const & layout, int dir, sf::Vector2f * result)
-{
-	if (dir < 5)
-	{
-		result[0] = layout.corners[dir];
-		result[1] = layout.corners[dir + 1];
-	}
-	else
-	{
-		result[0] = layout.corners[5];
-		result[1] = layout.corners[0];
-	}
-}
-
-void hex::Coord::vertice(Layout const & layout, direction_t dir, sf::Vector2f * result)
-{
-	vertice(layout, static_cast<int>(dir), result);
-}
-
-
-
-
-
-
 std::vector<hex::Coord> hex::line(Coord const & a, Coord const & b)
 {
 	std::vector<hex::Coord> result;
@@ -631,80 +504,6 @@ void hex::spiral(std::vector<Coord> & result, Coord const & center, int N)
   result.emplace_back(center);
   for (int i = 1; i < N; ++i)
     ring(result, center, i);
-}
-
-
-
-
-
-
-
-void hex::append_hex(sf::VertexArray & target,
-                Coord const & coord,
-                sf::Vector2f const & texture_center,
-                std::array<sf::Vector2f, 6> const & texture_corner)
-{
-	append_hex(target, default_layout, coord, texture_center, texture_corner);
-}
-
-void hex::append_hex(sf::VertexArray & target,
-                Layout const & layout,
-                Coord const & coord,
-                sf::Vector2f const & texture_center,
-                std::array<sf::Vector2f, 6> const & texture_corner)
-{
-	sf::Vector2f hex_center = coord.to_pixel(layout);
-
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 1), texture_corner[1]));
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 2), texture_corner[2]));
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 3), texture_corner[3]));
-
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 1), texture_corner[1]));
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 3), texture_corner[3]));
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 4), texture_corner[4]));
-
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 1), texture_corner[1]));
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 4), texture_corner[4]));
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 0), texture_corner[0]));
-
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 0), texture_corner[0]));
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 4), texture_corner[4]));
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 5), texture_corner[5]));
-}
-
-
-
-
-void hex::append_hex(sf::VertexArray & target,
-                     Coord const & coord,
-                     sf::Color color)
-{
-	append_hex(target, default_layout, coord, color);
-}
-
-void hex::append_hex(sf::VertexArray & target,
-                     Layout const & layout,
-                     Coord const & coord,
-                     sf::Color color)
-{
-	sf::Vector2f hex_center = coord.to_pixel(layout);
-
-
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 1), color));
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 2), color));
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 3), color));
-
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 1), color));
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 3), color));
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 4), color));
-
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 1), color));
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 4), color));
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 0), color));
-
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 0), color));
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 4), color));
-	target.append(sf::Vertex(hex_center + hex::Coord::corner(layout, 5), color));
 }
 
 
@@ -818,29 +617,6 @@ hex::FractionalCoord::FractionalCoord(Coord const & c)
 {
 	assert(std::round(m_q + m_r + m_s) == 0);
 }
-
-hex::FractionalCoord::FractionalCoord(sf::Vector2f const & p)
-: FractionalCoord(default_layout, p)
-{}
-
-hex::FractionalCoord::FractionalCoord(Layout const & layout, sf::Vector2f const & p)
-: m_q()
-, m_r()
-, m_s()
-{
-	double x = (p.x - layout.origin_x) / layout.size_x;
-	double y = (p.y - layout.origin_y) / layout.size_y;
-
-	double q = layout.orientation.b0 * x + layout.orientation.b1 * y;
-	double r = layout.orientation.b2 * x + layout.orientation.b3 * y;
-
-	m_q = q;
-	m_r = r;
-	m_s = -q -r;
-
-	assert(std::round(m_q + m_r + m_s) == 0);
-}
-
 
 hex::FractionalCoord & hex::FractionalCoord::operator+=(FractionalCoord const & oth)
 {
@@ -1207,4 +983,55 @@ std::ostream & operator<<(std::ostream & os, hex::DoubledCoord const & c)
 {
 	os << c.col() << ", " << c.row();
 	return (os);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/*******************************************************************************
+                 _       __
+                | |     / /________ _____  ____  ___  _____
+                | | /| / / ___/ __ `/ __ \/ __ \/ _ \/ ___/
+                | |/ |/ / /  / /_/ / /_/ / /_/ /  __/ /
+                |__/|__/_/   \__,_/ .___/ .___/\___/_/
+                                 /_/   /_/
+*******************************************************************************/
+
+
+
+
+
+Wrapper::Wrapper(bool wrap_horizontaly, bool wrap_verticaly)
+: m_wrap_horizontaly(wrap_horizontaly)
+, m_wrap_verticaly(wrap_verticaly)
+{}
+
+
+bool Wrapper::wrap_horizontaly() const
+{
+	return (m_wrap_horizontaly);
+}
+
+bool Wrapper::wrap_verticaly() const
+{
+	return (m_wrap_verticaly);
+}
+
+
+void Wrapper::set_wrap_horizontaly(bool b)
+{
+	m_wrap_horizontaly = b;
+}
+
+void Wrapper::set_wrap_verticaly(bool b)
+{
+	m_wrap_verticaly = b;
 }

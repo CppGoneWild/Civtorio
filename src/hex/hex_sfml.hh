@@ -31,20 +31,27 @@ void corner(std::vector<sf::Vector2f> &);
 void vertice(int dir, sf::Vector2f * result);
 void vertice(direction_t dir, sf::Vector2f * result);
 
-sf::Vector2f to_pixel(Coord const &, ) const;
+sf::Vector2f to_pixel(Coord const &) const;
 void to_pixel(Coord const &, std::array<sf::Vector2f, 6> &) const;
 void to_pixel(Coord const &, std::vector<sf::Vector2f> &) const;
+
+void from_pixel(sf::Vector2f const &, Coord & result);
+void from_pixel(sf::Vector2f const &, FractionalCoord & result);
 
 void append_hex(sf::VertexArray & target,
                 Coord const & coord,
                 sf::Vector2f const & texture_center,
                 std::array<sf::Vector2f, 6> const & texture_corner);
-
 void append_hex(sf::VertexArray & target, Coord const & coord, sf::Color);
 
 void append_hex_vertice(sf::VertexArray & target,
                         Coord const & coord,
-                        int corner_start, int corner_end,
+                        int dir,
+                        float thickness,
+                        sf::Color color_start, sf::Color color_end);
+void append_hex_vertice(sf::VertexArray & target,
+                        Coord const & coord,
+                        direction_t dir,
                         float thickness,
                         sf::Color color_start, sf::Color color_end);
 
@@ -64,6 +71,9 @@ sf::Vector2f to_pixel(Layout const &, Coord const &) const;
 void to_pixel(Layout const &, Coord const &, std::array<sf::Vector2f, 6> &) const;
 void to_pixel(Layout const &, Coord const &, std::vector<sf::Vector2f> &) const;
 
+void from_pixel(Layout const &, sf::Vector2f const &, Coord & result);
+void from_pixel(Layout const &, sf::Vector2f const &, FractionalCoord & result);
+
 void append_hex(sf::VertexArray & target,
                 Layout const & layout,
                 Coord const & coord,
@@ -78,7 +88,13 @@ void append_hex(sf::VertexArray & target,
 void append_hex_vertice(sf::VertexArray & target,
                         Layout const & layout,
                         Coord const & coord,
-                        int corner_start, int corner_end,
+                        int dir,
+                        float thickness,
+                        sf::Color color_start, sf::Color color_end);
+void append_hex_vertice(sf::VertexArray & target,
+                        Layout const & layout,
+                        Coord const & coord,
+                        direction_t dir,
                         float thickness,
                         sf::Color color_start, sf::Color color_end);
 

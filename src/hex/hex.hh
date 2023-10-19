@@ -10,14 +10,7 @@
 #include <iostream>
 #include <vector>
 #include <array>
-#include <cmath>
-#include <cassert>
 #include <bitset>
-
-#include <SFML/Graphics.hpp>
-
-
-#define SQRT_OF_3 (1.73205080757)
 
 
 
@@ -30,6 +23,46 @@ namespace hex {
 }
 
 
+
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////                                                                        //// 
+//// https://www.redblobgames.com/grids/hexagons/                           ////
+////                                                                        ////
+//// case                                                                   ////
+//// - Pointy Top                                                           ////
+//// - Even-R                                                               ////
+//// - Rectangular Map storage                                              ////
+//// 	- 2D-array                                                            ////
+////                                                                        ////
+////////////////////////////////////////////////////////////////////////////////
+////                                                                        ////
+////                             X     X                                    ////
+////                            / \   / \                                   ////
+////                           /   \ /   \                                  ////
+////                          Y     Y     Y                                 ////
+////                          |     |     |                                 ////
+////                          |     |     |                                 ////
+////       1                  X     X     X                       X         ////
+////      / \                / \   / \   / \                   1 / \ 0      ////
+////     /   \              /   \ /   \ /   \                   /   \       ////
+////    2     0            Y     Y     Y     Y                 Y     Y      ////
+////    |     |            |     |     |     |                 |     |      ////
+////    |     |            |     |     |     |               2 |     | 5    ////
+////    3     5            X     X     X     X                 X     X      ////
+////     \   /              \   / \   / \   /                   \   /       ////
+////      \ /                \ /   \ /   \ /                   3 \ / 4      ////
+////       4                  Y     Y     Y                       Y         ////
+////                          |     |     |                                 ////
+////                          |     |     |                                 ////
+////  Corners Idx             X     X     X                 Vertices Idx    ////
+////                           \   / \   /                                  ////
+////                            \ /   \ /                                   ////
+////                             Y     Y                                    ////
+////                                                                        ////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -64,7 +97,7 @@ enum class direction_t
 	__MAX
 };
 
-std::string encode_direction(hex::direction_t);
+std::string const & encode_direction(hex::direction_t);
 std::string encode_direction(std::bitset<6>);
 
 std::bitset<6> decode_direction(std::string const &);
@@ -84,7 +117,12 @@ std::ostream & operator<<(std::ostream &, hex::direction_t);
 
 
 /*******************************************************************************
-
+                      __                            __
+                     / /   ____ ___  ______  __  __/ /_
+                    / /   / __ `/ / / / __ \/ / / / __/
+                   / /___/ /_/ / /_/ / /_/ / /_/ / /_
+                  /_____/\__,_/\__, /\____/\__,_/\__/
+                              /____/
 *******************************************************************************/
 
 
@@ -194,8 +232,6 @@ public:
 	Coord(int, int, int);
 	explicit Coord(FractionalCoord const &);
 	explicit Coord(OffestCoord const &);
-	explicit Coord(sf::Vector2f const &); // from_pxl
-	explicit Coord(Layout const &, sf::Vector2f const &); // from_pxl
 	explicit Coord(DoubledCoord const &);
 
 	int q() const;
@@ -229,39 +265,6 @@ public:
 	int distance(Coord const &) const;
 
 
-
-	sf::Vector2f to_pixel() const;
-	void to_pixel(std::array<sf::Vector2f, 6> &) const;
-	void to_pixel(std::vector<sf::Vector2f> &) const;
-
-	sf::Vector2f to_pixel(Layout const &) const;
-	void to_pixel(Layout const &, std::array<sf::Vector2f, 6> &) const;
-	void to_pixel(Layout const &, std::vector<sf::Vector2f> &) const;
-
-
-	//    1
-	//   / \
-	//  2   0 
-	//  |   |
-	//  3   5
-	//   \ /
-	//    4
-
-	static sf::Vector2f corner(int corner);
-	static void corner(std::array<sf::Vector2f, 6> &);
-	static void corner(std::vector<sf::Vector2f> &);
-
-	static sf::Vector2f corner(Layout const &, int corner);
-	static void corner(Layout const &, std::array<sf::Vector2f, 6> &);
-	static void corner(Layout const &, std::vector<sf::Vector2f> &);
-
-
-	static void vertice(int dir, sf::Vector2f * result);
-	static void vertice(direction_t dir, sf::Vector2f * result);
-
-	static void vertice(Layout const &, int dir, sf::Vector2f * result);
-	static void vertice(Layout const &, direction_t dir, sf::Vector2f * result);
-
 private:
    int m_q = 0;
    int m_r = 0;
@@ -284,30 +287,6 @@ void ring(std::vector<Coord> &, Coord const &, int);
 
 std::vector<Coord> spiral(Coord const &, int);
 void spiral(std::vector<Coord> &, Coord const &, int);
-
-
-
-
-
-void append_hex(sf::VertexArray & target,
-                Coord const & coord,
-                sf::Vector2f const & texture_center,
-                std::array<sf::Vector2f, 6> const & texture_corner);
-
-void append_hex(sf::VertexArray & target,
-                Layout const & layout,
-                Coord const & coord,
-                sf::Vector2f const & texture_center,
-                std::array<sf::Vector2f, 6> const & texture_corner);
-
-
-
-void append_hex(sf::VertexArray & target, Coord const & coord, sf::Color);
-
-void append_hex(sf::VertexArray & target,
-                Layout const & layout,
-                Coord const & coord,
-                sf::Color);
 
 
 
@@ -369,8 +348,6 @@ public:
 
 	FractionalCoord(double, double, double);
 	FractionalCoord(Coord const &);
-	FractionalCoord(sf::Vector2f const &); // from pixel
-	FractionalCoord(Layout const &, sf::Vector2f const &); // from pixel
 
 	FractionalCoord & operator+=(FractionalCoord const &);
 	FractionalCoord & operator-=(FractionalCoord const &);
@@ -616,7 +593,8 @@ private:
 
 
 
-	
+
+
 } // hex
 
 
@@ -645,14 +623,15 @@ void hex::RectMap<T>::resize(std::size_t height, std::size_t width, T const & de
 template <class T>
 std::size_t hex::RectMap<T>::height() const
 {
-	return (m_data.size());
+	return (m_max_coord.row());
 }
 
 template <class T>
 std::size_t hex::RectMap<T>::width() const
 {
-	return (m_data.size() > 0 ? m_data.front().size() : 0);
+	return (m_max_coord.col());
 }
+
 
 
 
@@ -666,8 +645,8 @@ template <class T>
 bool hex::RectMap<T>::is_in_bound(OffestCoord const & c) const
 {
 	return (c.row() >= 0 && c.col() >= 0 &&
-	        c.row() < static_cast<int>(height()) &&
-	        c.col() < static_cast<int>(width()));
+	        c.row() < m_max_coord.row() &&
+	        c.col() < m_max_coord.col());
 }
 
 
@@ -697,6 +676,118 @@ T & hex::RectMap<T>::operator[](OffestCoord const & c)
 {
 	return (m_data[c.row()][c.col()]);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+/*******************************************************************************
+                 _       __
+                | |     / /________ _____  ____  ___  _____
+                | | /| / / ___/ __ `/ __ \/ __ \/ _ \/ ___/
+                | |/ |/ / /  / /_/ / /_/ / /_/ /  __/ /
+                |__/|__/_/   \__,_/ .___/ .___/\___/_/
+                                 /_/   /_/
+*******************************************************************************/
+
+
+
+
+
+namespace hex
+{
+
+
+class Wrapper
+{
+public:
+	Wrapper()                = default;
+	Wrapper(Wrapper const &) = default;
+	Wrapper(Wrapper &&)      = default;
+	~Wrapper()               = default;
+
+	Wrapper & operator=(Wrapper const &) = default;
+	Wrapper & operator=(Wrapper &&)      = default;
+
+	Wrapper(bool wrap_horizontaly, bool wrap_verticaly = false);
+
+	bool wrap_horizontaly() const;
+	bool wrap_verticaly() const;
+
+	void set_wrap_horizontaly(bool);
+	void set_wrap_verticaly(bool);
+
+	template <class T>
+	bool wrap(RectMap<T> const &, OffestCoord &) const;
+	template <class T>
+	bool wrap(RectMap<T> const &, Coord const &, Coord & result) const;
+	template <class T>
+	bool wrap(RectMap<T> const &, Coord const &, OffestCoord & result) const;
+	template <class T>
+	bool wrap(RectMap<T> const &, OffestCoord const &, OffestCoord & result) const;
+
+private:
+	bool m_wrap_horizontaly = false;
+	bool m_wrap_verticaly = false;
+}
+
+
+} // hex
+
+
+
+
+
+template <class T>
+bool hex::Wrapper::wrap(RectMap<T> const & map, OffestCoord & coord) const
+{
+	OffestCoord result;
+
+	bool ret = wrap(map, coord, result);
+	if (ret)
+		coord = result;
+
+	return (ret);
+}
+
+template <class T>
+bool hex::Wrapper::wrap(RectMap<T> const & map, Coord const & coord, Coord & result) const
+{
+	OffestCoord tmp;
+	bool ret = wrap(map, OffestCoord(coord), tmp);
+	result = Coord(tmp);
+	return (ret);
+}
+
+template <class T>
+bool hex::Wrapper::wrap(RectMap<T> const & map, Coord const & coord, OffestCoord & result) const
+{
+	return (wrap(map, OffsetCoord(coord), result));
+}
+
+template <class T>
+bool hex::Wrapper::wrap(RectMap<T> const & map, OffestCoord const & coord, OffestCoord & result) const
+{
+	int wrapped_col = coord.col();
+	int wrapped_row = coord.row();
+
+	if (m_wrap_horizontaly)
+		wrapped_col %= map.width();
+	if (m_wrap_verticaly)
+		wrapped_row %= map.height();
+
+	result = OffestCoord(col, row);
+
+	return (map.is_in_bound(coord));
+}
+
 
 
 
