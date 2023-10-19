@@ -1,0 +1,38 @@
+imgui >= 1.80
+	https://github.com/ocornut/imgui
+	clone depot here
+	checkout c6e0284ac58b3f205c95365478888f7b53b077e2
+	apply patch "external/imgui_imconfig.h.patch" to "external/imgui/imconfig.h"
+
+imgui-sfml == 2.5
+	https://github.com/eliasdaler/imgui-sfml
+	clone depot here
+	checkout 9cc8c57a4565551087be0d9aeb3ae55490aa1207
+
+implot
+	https://github.com/epezent/implot.git
+	clone depot here
+
+SFML >= 2.5.0
+	use apt-get install libsfml-dev if you can and CHECK VERSION
+	if you can't :
+		https://github.com/SFML/SFML
+		https://www.sfml-dev.org/download/sfml/2.5.1/index-fr.php
+		Edit Makefile accordingly
+
+PerlinNoise >= 3.0
+	https://github.com/Reputeless/PerlinNoise
+	clone depot here
+
+
+lucky set-up :
+
+sudo apt-get install libsfml-dev
+git clone https://github.com/ocornut/imgui.git
+git clone https://github.com/eliasdaler/imgui-sfml.git
+git clone https://github.com/epezent/implot.git
+git clone https://github.com/Reputeless/PerlinNoise.git
+
+apply patch "external/imgui_imconfig.h.patch" to "external/imgui/imconfig.h"
+
+Execute make in the folder test and execute imgui.out

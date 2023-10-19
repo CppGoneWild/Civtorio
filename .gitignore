@@ -30,3 +30,19 @@
 *.exe
 *.out
 *.app
+
+# Dependancies
+external/imgui/
+external/imgui-sfml/
+external/implot/
+external/PerlinNoise/
+!external/imgui/imconfig.h
+
+# Temporary file
+**~*
+**imgui.ini
+**log.csv
+*.log
+
+# Doxygen
+dox/
