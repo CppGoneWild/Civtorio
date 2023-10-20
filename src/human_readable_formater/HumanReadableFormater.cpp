@@ -59,6 +59,9 @@ struct PowerOfTenName
 	PowerOfTenName(std::string const & l, std::string const & s, int p)
 	: long_string(), short_string(), power_nbr(p), ref_value(std::pow(10., (double(p))))
 	{
+		assert(l.size() <= sizeof(long_string));
+		assert(s.size() <= sizeof(short_string));
+
 		std::strncpy(long_string, l.c_str(), sizeof(long_string));
 		std::strncpy(short_string, s.c_str(), sizeof(short_string));
 	}
@@ -123,7 +126,9 @@ static PowerOfTenName const & __find_power_of_ten(double value, HumanReadableFor
 		data_size = data_mass.size();
 	}
 
-	assert(data && data_size);
+
+	assert(data && data_size); // format.type is not a valid HumanReadableFormater::format_short_t::type_t
+
 
 	const int nb_digit = std::floor(std::log10(value) + 1);
 
@@ -143,6 +148,9 @@ static PowerOfTenName const & __find_power_of_ten(double value, HumanReadableFor
 
 std::string HumanReadableFormater::short_form(double value, format_short_t const & format) const
 {
+	assert(format.nb_digit_after_decimal_sep >= 0);
+
+
 	const bool is_neg = (value < 0.);
 	if (is_neg)
 		value *= -1.0;
@@ -202,7 +210,7 @@ std::string HumanReadableFormater::short_form(double value, format_short_t const
 
 
 
-static std::string __print_exact_and_simple(double value, HumanReadableFormater::format_exact_t const & format)
+static std::string __print_exact_without_thousand_separator(double value, HumanReadableFormater::format_exact_t const & format)
 {
 	double integer_part;
 	double fractional_part = std::modf(value, &integer_part);
@@ -219,7 +227,7 @@ static std::string __print_exact_and_simple(double value, HumanReadableFormater:
 
 
 
-static std::string __print_exact_and_complex(double value, HumanReadableFormater::format_exact_t const & format)
+static std::string __print_exact_with_thousand_separator(double value, HumanReadableFormater::format_exact_t const & format)
 {
 	double integer_part;
 	double fractional_part = std::modf(value, &integer_part);
@@ -265,6 +273,9 @@ static std::string __print_exact_and_complex(double value, HumanReadableFormater
 
 std::string HumanReadableFormater::exact_form(double value, format_exact_t const & format) const
 {
+	assert(format.nb_digit_after_decimal_sep >= 0);
+
+
 	std::string result;
 
 	const bool is_neg = (value < 0.);
@@ -274,9 +285,9 @@ std::string HumanReadableFormater::exact_form(double value, format_exact_t const
 	__print_sign(result, is_neg, format);
 
 	if (format.print_thousand_separator == false)
-		result += __print_exact_and_simple(value, format);
+		result += __print_exact_without_thousand_separator(value, format);
 	else
-		result += __print_exact_and_complex(value, format);
+		result += __print_exact_with_thousand_separator(value, format);
 
 	return (result);
 }
