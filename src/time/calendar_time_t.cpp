@@ -88,6 +88,8 @@ time::calendar_time_t::month_data_t const & time::calendar_time_t::month_data(in
 
 bool time::calendar_time_t::is_leap_year(std::uint64_t year)
 {
+	assert(year != 0);
+
 	if (year % 400 == 0)
 		return (true);
 
@@ -126,6 +128,8 @@ time::calendar_time_t::calendar_time_t(in_game_t ig)
 {
 	std::uint64_t sec = ig.count();
 
+	/////////////
+	// hh::mm::ss
 	std::uint64_t days = sec / (60*60*24);
 	sec %= (60*60*24)
 	m_hours = sec / (60*60);
@@ -134,8 +138,12 @@ time::calendar_time_t::calendar_time_t(in_game_t ig)
 	sec %= (60)
 	m_seconds = sec;
 
-	m_day_of_week = days % 7;
+	/////////////
+	// day of week
+	// m_day_of_week = days % 7;                 // 1 Jan 01 is Monday
+	m_day_of_week = ((days % 7) + Saturday) % 7; // 1 Jan 01 is Saturday
 
+	/////////////
 	// year
 	{
 		bool reduce = true;
@@ -152,22 +160,14 @@ time::calendar_time_t::calendar_time_t(in_game_t ig)
 
 	m_day_of_year = days;
 
+	/////////////
 	// month
 	{
-		bool leap = is_leap_year(m_year);
+		std::uint64_t fs = (is_leap_year(m_year) ? 29 : 28);
 
 		m_month = January;
-		if (days >= 31) { m_month = Febuary; days -= 31; }
-
-		if (leap)
-		{
-			if (days >= 29) { m_month = Febuary; days -= 29; }
-		}
-		else
-		{
-			if (days >= 28) { m_month = Febuary; days -= 28; }
-		}
-
+		if (days >= 31) { m_month = Febuary;   days -= 31; }
+		if (days >= fs) { m_month = Febuary;   days -= fs; }
 		if (days >= 31) { m_month = March;     days -= 31; }
 		if (days >= 30) { m_month = April;     days -= 30; }
 		if (days >= 31) { m_month = May;       days -= 31; }
