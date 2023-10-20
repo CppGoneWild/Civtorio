@@ -33,9 +33,6 @@ int main()
 
         ImGui::SFML::Update(window, deltaClock.restart());
 
-//        ImGui::ShowDemoWindow();
-//        ImPlot::ShowDemoWindow();
-
 
 
         window.clear();

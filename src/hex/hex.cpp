@@ -48,6 +48,10 @@ const Layout::Orientation Layout::orientation = Layout::Orientation(SQRT_OF_3,
                                                                     0.5);
 
 
+Layout::Layout(double radius)
+: Layout(radius / SQRT_OF_3, radius / 2.0, 0, 0)
+{}
+
 Layout::Layout(double s_x, double s_y, double o_x, double o_y)
 : size_x(s_x)
 , size_y(s_y)
@@ -65,7 +69,7 @@ sf::Vector2f Layout::__corner(int corner) const
 	return (sf::Vector2f(size_x * cos(angle), size_y * sin(angle)));
 }
 
-Layout default_layout(100 / SQRT_OF_3, 100 / 2, 0, 0);
+Layout default_layout(100.);
 
 
 } // hex
@@ -247,7 +251,7 @@ hex::Coord::Coord(FractionalCoord const & oth)
   assert(m_q + m_r + m_s == 0);
 }
 
-hex::Coord::Coord(OffestCoord const & oth)
+hex::Coord::Coord(OffsetCoord const & oth)
 : m_q(oth.col() - static_cast<int>((oth.row() + Layout::offset_type * (oth.row() & 1)) / 2))
 , m_r(oth.row())
 , m_s(-m_q - m_r)
@@ -770,22 +774,22 @@ std::ostream & operator<<(std::ostream & os, hex::FractionalCoord const & c)
 
 
 
-hex::OffestCoord::OffestCoord(int col, int row)
+hex::OffsetCoord::OffsetCoord(int col, int row)
 : m_col(col)
 , m_row(row)
 {}
 
-hex::OffestCoord::OffestCoord(Coord const & oth)
+hex::OffsetCoord::OffsetCoord(Coord const & oth)
 : m_col(oth.q() + int((oth.r() + Layout::offset_type * (oth.r() & 1)) / 2))
 , m_row(oth.r())
 {}
 
-hex::OffestCoord::OffestCoord(FractionalCoord const & oth)
-: OffestCoord(Coord((oth)))
+hex::OffsetCoord::OffsetCoord(FractionalCoord const & oth)
+: OffsetCoord(Coord((oth)))
 {}
 
 
-hex::OffestCoord & hex::OffestCoord::operator+=(OffestCoord const & oth)
+hex::OffsetCoord & hex::OffsetCoord::operator+=(OffsetCoord const & oth)
 {
 	m_col += oth.m_col;
 	m_row += oth.m_row;
@@ -793,7 +797,7 @@ hex::OffestCoord & hex::OffestCoord::operator+=(OffestCoord const & oth)
 
 }
 
-hex::OffestCoord & hex::OffestCoord::operator-=(OffestCoord const & oth)
+hex::OffsetCoord & hex::OffsetCoord::operator-=(OffsetCoord const & oth)
 {
 	m_col -= oth.m_col;
 	m_row -= oth.m_row;
@@ -802,12 +806,12 @@ hex::OffestCoord & hex::OffestCoord::operator-=(OffestCoord const & oth)
 }
 
 
-int hex::OffestCoord::col() const
+int hex::OffsetCoord::col() const
 {
 	return (m_col);
 }
 
-int hex::OffestCoord::row() const
+int hex::OffsetCoord::row() const
 {
 	return (m_row);
 }
@@ -818,40 +822,40 @@ int hex::OffestCoord::row() const
 
 
 
-bool operator==(hex::OffestCoord const & left, hex::OffestCoord const & right)
+bool operator==(hex::OffsetCoord const & left, hex::OffsetCoord const & right)
 {
 	return (left.col() == right.col() && left.row() == right.row());
 }
 
-bool operator!=(hex::OffestCoord const & left, hex::OffestCoord const & right)
+bool operator!=(hex::OffsetCoord const & left, hex::OffsetCoord const & right)
 {
 	return (left.col() != right.col() || left.row() != right.row());
 }
 
-bool operator<(hex::OffestCoord const & left, hex::OffestCoord const & right)
+bool operator<(hex::OffsetCoord const & left, hex::OffsetCoord const & right)
 {
 	return (left.col() < right.col() && left.row() < right.row());
 }
 
 
 
-hex::OffestCoord operator+(hex::OffestCoord const & left, hex::OffestCoord const & right)
+hex::OffsetCoord operator+(hex::OffsetCoord const & left, hex::OffsetCoord const & right)
 {
-	hex::OffestCoord tmp(left);
+	hex::OffsetCoord tmp(left);
 	tmp += right;
 	return (tmp);
 }
 
-hex::OffestCoord operator-(hex::OffestCoord const & left, hex::OffestCoord const & right)
+hex::OffsetCoord operator-(hex::OffsetCoord const & left, hex::OffsetCoord const & right)
 {
-	hex::OffestCoord tmp(left);
+	hex::OffsetCoord tmp(left);
 	tmp -= right;
 	return (tmp);
 }
 
 
 
-std::string to_string(hex::OffestCoord const & c)
+std::string to_string(hex::OffsetCoord const & c)
 {
 	std::string result;
 	result += std::to_string(c.col());
@@ -860,7 +864,7 @@ std::string to_string(hex::OffestCoord const & c)
 	return (result);	
 }
 
-std::ostream & operator<<(std::ostream & os, hex::OffestCoord const & c)
+std::ostream & operator<<(std::ostream & os, hex::OffsetCoord const & c)
 {
 	os << c.col() << ", " << c.row();
 	return (os);
@@ -1009,29 +1013,29 @@ std::ostream & operator<<(std::ostream & os, hex::DoubledCoord const & c)
 
 
 
-Wrapper::Wrapper(bool wrap_horizontaly, bool wrap_verticaly)
+hex::Wrapper::Wrapper(bool wrap_horizontaly, bool wrap_verticaly)
 : m_wrap_horizontaly(wrap_horizontaly)
 , m_wrap_verticaly(wrap_verticaly)
 {}
 
 
-bool Wrapper::wrap_horizontaly() const
+bool hex::Wrapper::wrap_horizontaly() const
 {
 	return (m_wrap_horizontaly);
 }
 
-bool Wrapper::wrap_verticaly() const
+bool hex::Wrapper::wrap_verticaly() const
 {
 	return (m_wrap_verticaly);
 }
 
 
-void Wrapper::set_wrap_horizontaly(bool b)
+void hex::Wrapper::set_wrap_horizontaly(bool b)
 {
 	m_wrap_horizontaly = b;
 }
 
-void Wrapper::set_wrap_verticaly(bool b)
+void hex::Wrapper::set_wrap_verticaly(bool b)
 {
 	m_wrap_verticaly = b;
 }

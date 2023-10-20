@@ -31,9 +31,9 @@ void corner(std::vector<sf::Vector2f> &);
 void vertice(int dir, sf::Vector2f * result);
 void vertice(direction_t dir, sf::Vector2f * result);
 
-sf::Vector2f to_pixel(Coord const &) const;
-void to_pixel(Coord const &, std::array<sf::Vector2f, 6> &) const;
-void to_pixel(Coord const &, std::vector<sf::Vector2f> &) const;
+sf::Vector2f to_pixel(Coord const &);
+void to_pixel(Coord const &, std::array<sf::Vector2f, 6> &);
+void to_pixel(Coord const &, std::vector<sf::Vector2f> &);
 
 void from_pixel(sf::Vector2f const &, Coord & result);
 void from_pixel(sf::Vector2f const &, FractionalCoord & result);
@@ -67,9 +67,9 @@ void corner(Layout const &, std::vector<sf::Vector2f> &);
 void vertice(Layout const &, int dir, sf::Vector2f * result);
 void vertice(Layout const &, direction_t dir, sf::Vector2f * result);
 
-sf::Vector2f to_pixel(Layout const &, Coord const &) const;
-void to_pixel(Layout const &, Coord const &, std::array<sf::Vector2f, 6> &) const;
-void to_pixel(Layout const &, Coord const &, std::vector<sf::Vector2f> &) const;
+sf::Vector2f to_pixel(Layout const &, Coord const &);
+void to_pixel(Layout const &, Coord const &, std::array<sf::Vector2f, 6> &);
+void to_pixel(Layout const &, Coord const &, std::vector<sf::Vector2f> &);
 
 void from_pixel(Layout const &, sf::Vector2f const &, Coord & result);
 void from_pixel(Layout const &, sf::Vector2f const &, FractionalCoord & result);

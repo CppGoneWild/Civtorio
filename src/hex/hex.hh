@@ -12,13 +12,16 @@
 #include <array>
 #include <bitset>
 
+#include <SFML/Graphics.hpp> // sf::Vector2f
+
+
 
 
 
 namespace hex {
 	class Coord;
 	class FractionalCoord;
-	class OffestCoord;
+	class OffsetCoord;
 	class DoubledCoord;
 }
 
@@ -170,6 +173,7 @@ struct Layout
 	double origin_y;
 	sf::Vector2f corners[6];
 
+	Layout(double hex_radius);
 	Layout(double s_x, double s_y, double o_x, double o_y);
 
 
@@ -231,7 +235,7 @@ public:
 	Coord(int, int);
 	Coord(int, int, int);
 	explicit Coord(FractionalCoord const &);
-	explicit Coord(OffestCoord const &);
+	explicit Coord(OffsetCoord const &);
 	explicit Coord(DoubledCoord const &);
 
 	int q() const;
@@ -414,23 +418,23 @@ namespace hex
 
 
 
-class OffestCoord
+class OffsetCoord
 {
 public:
-	OffestCoord()                    = default;
-	OffestCoord(OffestCoord const &) = default;
-	OffestCoord(OffestCoord &&)      = default;
-	~OffestCoord()                   = default;
+	OffsetCoord()                    = default;
+	OffsetCoord(OffsetCoord const &) = default;
+	OffsetCoord(OffsetCoord &&)      = default;
+	~OffsetCoord()                   = default;
 
-	OffestCoord & operator=(OffestCoord const &) = default;
-	OffestCoord & operator=(OffestCoord &&)      = default;
+	OffsetCoord & operator=(OffsetCoord const &) = default;
+	OffsetCoord & operator=(OffsetCoord &&)      = default;
 
-	OffestCoord(int, int);
-	explicit OffestCoord(Coord const &);
-	explicit OffestCoord(FractionalCoord const &);
+	OffsetCoord(int, int);
+	explicit OffsetCoord(Coord const &);
+	explicit OffsetCoord(FractionalCoord const &);
 
-	OffestCoord & operator+=(OffestCoord const &);
-	OffestCoord & operator-=(OffestCoord const &);
+	OffsetCoord & operator+=(OffsetCoord const &);
+	OffsetCoord & operator-=(OffsetCoord const &);
 
 	int col() const;
 	int row() const;
@@ -446,13 +450,13 @@ private:
 
 
 
-bool operator==(hex::OffestCoord const &, hex::OffestCoord const &);
-bool operator!=(hex::OffestCoord const &, hex::OffestCoord const &);
-bool operator<(hex::OffestCoord const &, hex::OffestCoord const &);
+bool operator==(hex::OffsetCoord const &, hex::OffsetCoord const &);
+bool operator!=(hex::OffsetCoord const &, hex::OffsetCoord const &);
+bool operator<(hex::OffsetCoord const &, hex::OffsetCoord const &);
 
 
-hex::OffestCoord operator+(hex::OffestCoord const &, hex::OffestCoord const &);
-hex::OffestCoord operator-(hex::OffestCoord const &, hex::OffestCoord const &);
+hex::OffsetCoord operator+(hex::OffsetCoord const &, hex::OffsetCoord const &);
+hex::OffsetCoord operator-(hex::OffsetCoord const &, hex::OffsetCoord const &);
 
 
 std::string to_string(hex::DoubledCoord const &);
@@ -577,18 +581,19 @@ public:
 	std::size_t width() const;
 
 	bool is_in_bound(Coord const &) const;
-	bool is_in_bound(OffestCoord const &) const;
+	bool is_in_bound(OffsetCoord const &) const;
 
 	T const & operator[](Coord const &) const;
-	T const & operator[](OffestCoord const &) const;
+	T const & operator[](OffsetCoord const &) const;
 
 	T & operator[](Coord const &);
-	T & operator[](OffestCoord const &);
+	T & operator[](OffsetCoord const &);
 
 private:
 	root_t m_data;
 
-	Coord m_max_coord;
+	Coord       m_max_coord;
+	OffsetCoord m_max_offset_coord;
 };
 
 
@@ -603,7 +608,8 @@ private:
 template <class T>
 hex::RectMap<T>::RectMap(std::size_t height, std::size_t width, T const & def)
 : m_data(height, line_t(width, def))
-, m_max_coord(OffestCoord(height, width))
+, m_max_coord(OffsetCoord(height, width))
+, m_max_offset_coord(height, width)
 {}
 
 
@@ -611,7 +617,8 @@ hex::RectMap<T>::RectMap(std::size_t height, std::size_t width, T const & def)
 template <class T>
 void hex::RectMap<T>::resize(std::size_t height, std::size_t width, T const & def)
 {
-	m_max_coord = Coord(OffestCoord(height, width));
+	m_max_coord = Coord(OffsetCoord(height, width));
+	m_max_offset_coord = OffsetCoord(height, width);
 
 	m_data.resize(height);
 	for (auto it = m_data.begin(); it != m_data.end(); ++it)
@@ -623,13 +630,13 @@ void hex::RectMap<T>::resize(std::size_t height, std::size_t width, T const & de
 template <class T>
 std::size_t hex::RectMap<T>::height() const
 {
-	return (m_max_coord.row());
+	return (m_max_offset_coord.row());
 }
 
 template <class T>
 std::size_t hex::RectMap<T>::width() const
 {
-	return (m_max_coord.col());
+	return (m_max_offset_coord.col());
 }
 
 
@@ -638,15 +645,15 @@ std::size_t hex::RectMap<T>::width() const
 template <class T>
 bool hex::RectMap<T>::is_in_bound(Coord const & c) const
 {
-	return (is_in_bound(OffestCoord(c)));
+	return (is_in_bound(OffsetCoord(c)));
 }
 
 template <class T>
-bool hex::RectMap<T>::is_in_bound(OffestCoord const & c) const
+bool hex::RectMap<T>::is_in_bound(OffsetCoord const & c) const
 {
 	return (c.row() >= 0 && c.col() >= 0 &&
-	        c.row() < m_max_coord.row() &&
-	        c.col() < m_max_coord.col());
+	        c.row() < m_max_offset_coord.row() &&
+	        c.col() < m_max_offset_coord.col());
 }
 
 
@@ -654,11 +661,11 @@ bool hex::RectMap<T>::is_in_bound(OffestCoord const & c) const
 template <class T>
 T const & hex::RectMap<T>::operator[](Coord const & c) const
 {
-	return ((*this)[OffestCoord(c)]);
+	return ((*this)[OffsetCoord(c)]);
 }
 
 template <class T>
-T const & hex::RectMap<T>::operator[](OffestCoord const & c) const
+T const & hex::RectMap<T>::operator[](OffsetCoord const & c) const
 {
 	return (m_data[c.row()][c.col()]);
 }
@@ -668,11 +675,11 @@ T const & hex::RectMap<T>::operator[](OffestCoord const & c) const
 template <class T>
 T & hex::RectMap<T>::operator[](Coord const & c)
 {
-	return ((*this)[OffestCoord(c)]);
+	return ((*this)[OffsetCoord(c)]);
 }
 
 template <class T>
-T & hex::RectMap<T>::operator[](OffestCoord const & c)
+T & hex::RectMap<T>::operator[](OffsetCoord const & c)
 {
 	return (m_data[c.row()][c.col()]);
 }
@@ -725,18 +732,18 @@ public:
 	void set_wrap_verticaly(bool);
 
 	template <class T>
-	bool wrap(RectMap<T> const &, OffestCoord &) const;
+	bool wrap(RectMap<T> const &, OffsetCoord &) const;
 	template <class T>
 	bool wrap(RectMap<T> const &, Coord const &, Coord & result) const;
 	template <class T>
-	bool wrap(RectMap<T> const &, Coord const &, OffestCoord & result) const;
+	bool wrap(RectMap<T> const &, Coord const &, OffsetCoord & result) const;
 	template <class T>
-	bool wrap(RectMap<T> const &, OffestCoord const &, OffestCoord & result) const;
+	bool wrap(RectMap<T> const &, OffsetCoord const &, OffsetCoord & result) const;
 
 private:
 	bool m_wrap_horizontaly = false;
 	bool m_wrap_verticaly = false;
-}
+};
 
 
 } // hex
@@ -746,9 +753,9 @@ private:
 
 
 template <class T>
-bool hex::Wrapper::wrap(RectMap<T> const & map, OffestCoord & coord) const
+bool hex::Wrapper::wrap(RectMap<T> const & map, OffsetCoord & coord) const
 {
-	OffestCoord result;
+	OffsetCoord result;
 
 	bool ret = wrap(map, coord, result);
 	if (ret)
@@ -760,20 +767,20 @@ bool hex::Wrapper::wrap(RectMap<T> const & map, OffestCoord & coord) const
 template <class T>
 bool hex::Wrapper::wrap(RectMap<T> const & map, Coord const & coord, Coord & result) const
 {
-	OffestCoord tmp;
-	bool ret = wrap(map, OffestCoord(coord), tmp);
+	OffsetCoord tmp;
+	bool ret = wrap(map, OffsetCoord(coord), tmp);
 	result = Coord(tmp);
 	return (ret);
 }
 
 template <class T>
-bool hex::Wrapper::wrap(RectMap<T> const & map, Coord const & coord, OffestCoord & result) const
+bool hex::Wrapper::wrap(RectMap<T> const & map, Coord const & coord, OffsetCoord & result) const
 {
 	return (wrap(map, OffsetCoord(coord), result));
 }
 
 template <class T>
-bool hex::Wrapper::wrap(RectMap<T> const & map, OffestCoord const & coord, OffestCoord & result) const
+bool hex::Wrapper::wrap(RectMap<T> const & map, OffsetCoord const & coord, OffsetCoord & result) const
 {
 	int wrapped_col = coord.col();
 	int wrapped_row = coord.row();
@@ -783,7 +790,7 @@ bool hex::Wrapper::wrap(RectMap<T> const & map, OffestCoord const & coord, Offes
 	if (m_wrap_verticaly)
 		wrapped_row %= map.height();
 
-	result = OffestCoord(col, row);
+	result = OffsetCoord(wrapped_col, wrapped_row);
 
 	return (map.is_in_bound(coord));
 }
