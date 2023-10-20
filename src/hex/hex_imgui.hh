@@ -1,5 +1,5 @@
-#ifndef IMGUI_HEX_HH
-#define IMGUI_HEX_HH
+#ifndef HEX_IMGUI_HH
+#define HEX_IMGUI_HH
 
 
 
@@ -42,4 +42,4 @@ void Value(const char* prefix, hex::OffestCoord const &);
 
 
 
-#endif // IMGUI_HEX_HH
+#endif // HEX_IMGUI_HH

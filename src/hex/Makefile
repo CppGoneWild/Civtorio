@@ -28,7 +28,7 @@ SRC_DEMO_HEX  = $(SRC_IMGUI) \
                 hex_imgui.cpp \
                 hex_sfml.cpp \
                 \
-                hex_demo.cpp
+                demo_hex.cpp
 OBJ_DEMO_HEX  = $(SRC_DEMO_HEX:.cpp=.o)
 
 

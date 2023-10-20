@@ -1,5 +1,5 @@
-#ifndef SFML_HEX_HH
-#define SFML_HEX_HH
+#ifndef HEX_SFML_HH
+#define HEX_SFML_HH
 
 
 
@@ -106,4 +106,4 @@ void append_hex_vertice(sf::VertexArray & target,
 
 
 
-#endif // SFML_HEX_HH
+#endif // HEX_SFML_HH
