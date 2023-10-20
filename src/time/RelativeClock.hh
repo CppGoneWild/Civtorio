@@ -19,8 +19,13 @@ using host_time_t = double;
 class RelativeClock
 {
 public:
-	RelativeClock()  = default;
-	~RelativeClock() = default;
+	RelativeClock()                      = default;
+	RelativeClock(RelativeClock const &) = default;
+	RelativeClock(RelativeClock &&)      = default;
+	~RelativeClock()                     = default;
+
+	RelativeClock & operator=(RelativeClock const &) = default;
+	RelativeClock & operator=(RelativeClock &&)      = default;
 
 	std::uint64_t frame_counter() const;
 
@@ -42,11 +47,6 @@ public:
 	void advance_one_frame(double tick_duration_in_second);
 
 private:
-	RelativeClock(RelativeClock const &)             = delete;
-	RelativeClock(RelativeClock &&)                  = delete;
-	RelativeClock & operator=(RelativeClock const &) = delete;
-	RelativeClock & operator=(RelativeClock &&)      = delete;
-
 
 	std::uint64_t m_frame_counter = 0;
 

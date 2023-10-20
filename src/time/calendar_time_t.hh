@@ -81,8 +81,6 @@ public:
 	std::uint8_t  day_of_week() const;
 	std::uint16_t day_of_year() const;
 
-	std::uint8_t week_of_year() const;
-
 	std::uint8_t hour() const;
 	std::uint8_t minute() const;
 	std::uint8_t second() const;
@@ -101,8 +99,6 @@ private:
 	std::uint8_t  m_day_of_month = 0;
 	std::uint8_t  m_day_of_week  = 0;
 	std::uint16_t m_day_of_year  = 0;
-
-	std::uint8_t m_week_of_year = 0;
 
 	std::uint8_t m_hour   = 0;
 	std::uint8_t m_minute = 0;

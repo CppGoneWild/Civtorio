@@ -113,16 +113,75 @@ bool time::calendar_time_t::is_leap_year(std::uint64_t year)
 
 
 time::calendar_time_t::calendar_time_t(in_game_t ig)
-: m_year()
-, m_month()
-, m_day_of_month()
-, m_day_of_week()
-, m_day_of_year()
-, m_week_of_year()
-, m_hour()
-, m_minute()
-, m_second()
-{}
+: m_year(1)
+, m_month(0)
+
+, m_day_of_month(0)
+, m_day_of_week(0)
+, m_day_of_year(0)
+
+, m_hour(0)
+, m_minute(0)
+, m_second(0)
+{
+	std::uint64_t sec = ig.count();
+
+	std::uint64_t days = sec / (60*60*24);
+	sec %= (60*60*24)
+	m_hours = sec / (60*60);
+	sec %= (60*60)
+	m_minutes = sec / (60);
+	sec %= (60)
+	m_seconds = sec;
+
+	m_day_of_week = days % 7;
+
+	// year
+	{
+		bool reduce = true;
+		while (reduce)
+		{
+			bool leap = is_leap_year(m_year);
+			if ((leap && days < 366) ||
+			    (leap == false && days < 365))
+				break;
+			days -= (leap ? 366 : 365);
+			++m_year;
+		}
+	}
+
+	m_day_of_year = days;
+
+	// month
+	{
+		bool leap = is_leap_year(m_year);
+
+		m_month = January;
+		if (days >= 31) { m_month = Febuary; days -= 31; }
+
+		if (leap)
+		{
+			if (days >= 29) { m_month = Febuary; days -= 29; }
+		}
+		else
+		{
+			if (days >= 28) { m_month = Febuary; days -= 28; }
+		}
+
+		if (days >= 31) { m_month = March;     days -= 31; }
+		if (days >= 30) { m_month = April;     days -= 30; }
+		if (days >= 31) { m_month = May;       days -= 31; }
+		if (days >= 30) { m_month = June;      days -= 30; }
+		if (days >= 31) { m_month = July;      days -= 31; }
+		if (days >= 31) { m_month = August;    days -= 31; }
+		if (days >= 30) { m_month = September; days -= 30; }
+		if (days >= 31) { m_month = October;   days -= 31; }
+		if (days >= 30) { m_month = November;  days -= 30; }
+		if (days >= 31) { m_month = December;  days -= 31; }
+	}
+
+	m_day_of_month = days;
+}
 
 
 
