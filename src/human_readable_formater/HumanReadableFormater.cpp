@@ -169,7 +169,7 @@ std::string HumanReadableFormater::short_form(double value, format_short_t const
 	result += std::to_string(static_cast<unsigned int>(integer_part));
 
 
-	if (format.auto_nb_digit && format.nb_digit_after_decimal_sep == 0)
+	if (format.nb_digit_after_decimal_sep == 0 && format.auto_nb_digit)
 	{
 		int tmp_nb_digit_after_decimal_sep = 0;
 

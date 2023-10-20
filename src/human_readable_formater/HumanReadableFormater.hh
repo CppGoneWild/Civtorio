@@ -20,9 +20,9 @@ struct HumanReadableFormater
 	{
 		enum type_t
 		{
-			SI,
-			MONETARY,
-			MASS
+			SI       = 0,
+			MONETARY = 1,
+			MASS     = 2
 		};
 
 		bool print_long_form = false; // short form is 'k', long form is 'kilo'.
