@@ -19,9 +19,12 @@ int main()
     ImGui::SFML::Init(window);
     ImPlot::CreateContext();
 
+    sf::VertexArray array(sf::Triangles);
 
     sf::Clock deltaClock;
-    while (window.isOpen()) {
+    while (window.isOpen())
+    {
+
         sf::Event event;
         while (window.pollEvent(event)) {
             ImGui::SFML::ProcessEvent(window, event);
@@ -33,11 +36,17 @@ int main()
 
         ImGui::SFML::Update(window, deltaClock.restart());
 
+        array.clear();
 
+        hex::append_hex(array, hex::Coord(hex::OffsetCoord(0, 0)), sf::Color::White);
+        hex::append_hex(array, hex::Coord(hex::OffsetCoord(-1, -1)), sf::Color::Red);
+        hex::append_hex(array, hex::Coord(hex::OffsetCoord(0, 1)), sf::Color::Blue);
+        hex::append_hex(array, hex::Coord(hex::OffsetCoord(1, 0)), sf::Color::Green);
+        hex::append_hex(array, hex::Coord(hex::OffsetCoord(1, 1)), sf::Color::Yellow);
 
         window.clear();
 
-
+        window.draw(array);
 
         ImGui::SFML::Render(window);
         window.display();

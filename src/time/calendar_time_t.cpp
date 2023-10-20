@@ -146,8 +146,16 @@ time::calendar_time_t::calendar_time_t(in_game_t ig)
 	/////////////
 	// year
 	{
-		bool reduce = true;
-		while (reduce)
+		static const std::uint64_t nb_days_in_400_year = 146097;
+
+		if (days > nb_days_in_400_year)
+		{
+			m_year = (days / nb_days_in_400_year) * 400;
+			days %= nb_days_in_400_year;
+		}
+
+
+		for (;;)
 		{
 			bool leap = is_leap_year(m_year);
 			if ((leap && days < 366) ||
