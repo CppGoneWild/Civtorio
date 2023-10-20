@@ -23,18 +23,24 @@ static void __print_sign(std::string & result, bool is_neg, HumanReadableFormate
 }
 
 
-static void __print_fractional_part(std::string & result, double fractional_part, HumanReadableFormater::format_t const & format)
+static void __print_fractional_part(std::string & result, double fractional_part, int nb_digit_after_decimal_sep, char decimal_separator)
 {
-	if (format.nb_digit_after_decimal_sep > 0)
+	if (nb_digit_after_decimal_sep > 0)
 	{
-		fractional_part *= std::pow(10, format.nb_digit_after_decimal_sep);
+		fractional_part *= std::pow(10, nb_digit_after_decimal_sep);
 		unsigned int fractional_part_to_print = static_cast<unsigned int>(fractional_part);
 		if (fractional_part_to_print > 0)
 		{
-			result += format.decimal_separator;
+			result += decimal_separator;
 			result += std::to_string(fractional_part_to_print);
 		}
 	}
+}
+
+
+static void __print_fractional_part(std::string & result, double fractional_part, HumanReadableFormater::format_t const & format)
+{
+	__print_fractional_part(result, fractional_part, format.nb_digit_after_decimal_sep, format.decimal_separator);
 }
 
 
@@ -154,11 +160,19 @@ std::string HumanReadableFormater::short_form(double value, format_short_t const
 
 	result += std::to_string(static_cast<unsigned int>(integer_part));
 
-	if (integer_part < 10. && format.auto_nb_digit && format.nb_digit_after_decimal_sep == 0)
+
+	if (format.auto_nb_digit && format.nb_digit_after_decimal_sep == 0)
 	{
-		format_short_t tmp(format);
-		tmp.nb_digit_after_decimal_sep = 1;
-		__print_fractional_part(result, fractional_part, tmp);
+		int tmp_nb_digit_after_decimal_sep = 0;
+
+		if (integer_part >= 100.)
+			tmp_nb_digit_after_decimal_sep = 1;
+		else if (integer_part >= 10.)
+			tmp_nb_digit_after_decimal_sep = 2;
+		else if (integer_part < 10.)
+			tmp_nb_digit_after_decimal_sep = 3;
+
+		__print_fractional_part(result, fractional_part, tmp_nb_digit_after_decimal_sep, format.decimal_separator);
 	}
 	else
 	{
