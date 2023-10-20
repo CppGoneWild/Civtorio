@@ -64,7 +64,9 @@ public:
 	};
 	static month_data_t const & month_data(int month_of_year);
 	static month_data_t const & month_data(int month_of_year, std::int64_t year);
-	static month_data_t const & month_data(int month_of_year, bool is_bisextile);
+	static month_data_t const & month_data(int month_of_year, bool is_leap_year);
+
+	static bool is_leap_year(std::uint64_t);
 
 
 	calendar_time_t(in_game_t);
@@ -93,7 +95,7 @@ public:
 	calendar_time_t & operator-=(in_game_t);
 
 private:
-	std::int64_t m_year  = 0;
+	std::int64_t m_year  = 1;
 	std::uint8_t m_month = 0;
 
 	std::uint8_t  m_day_of_month = 0;
