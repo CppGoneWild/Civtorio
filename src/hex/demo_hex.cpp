@@ -12,6 +12,50 @@
 #include <SFML/Window.hpp>
 
 
+
+struct cursor_t
+{
+    cursor_t()
+    : off_coord()
+    , coord()
+    , to_draw(sf::Triangles)
+    , color_to_draw(sf::Color::White)
+    {}
+
+    void update(sf::Window const & win)
+    {
+        sf::Vector2i pos = sf::Mouse::getPosition(win);
+        sf::Vector2f posf(pos.x, pos.y);
+
+        hex::from_pixel(posf, coord);
+        off_coord = hex::OffsetCoord(coord);
+
+        to_draw.clear();
+        hex::append_hex_vertice(to_draw, coord, 3.f, color_to_draw);
+    }
+
+    void imgui()
+    {
+        ImGui::Begin("Mouse Cursor");
+
+        ImGui::SeparatorText("Hover");
+
+        ImGui::Value("Hex", coord);
+        ImGui::Value("Off", off_coord);
+
+        ImGui::End();
+    }
+
+
+    hex::OffsetCoord off_coord;
+    hex::Coord coord;
+
+    sf::VertexArray to_draw;
+    sf::Color color_to_draw;
+};
+
+
+
 int main()
 {
     sf::RenderWindow window(sf::VideoMode(640, 480), "Demo Hex");
@@ -19,6 +63,7 @@ int main()
     ImGui::SFML::Init(window);
     ImPlot::CreateContext();
 
+    cursor_t cursor;
     sf::VertexArray array(sf::Triangles);
 
     sf::Clock deltaClock;
@@ -36,8 +81,12 @@ int main()
 
         ImGui::SFML::Update(window, deltaClock.restart());
 
-        array.clear();
+        cursor.update(window);
 
+        cursor.imgui();
+
+
+        array.clear();
         hex::append_hex(array, hex::Coord(hex::OffsetCoord(0, 0)), sf::Color::White);
         hex::append_hex(array, hex::Coord(hex::OffsetCoord(-1, -1)), sf::Color::Red);
         hex::append_hex(array, hex::Coord(hex::OffsetCoord(0, 1)), sf::Color::Blue);
@@ -47,6 +96,7 @@ int main()
         window.clear();
 
         window.draw(array);
+        window.draw(cursor.to_draw);
 
         ImGui::SFML::Render(window);
         window.display();

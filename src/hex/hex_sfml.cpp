@@ -142,6 +142,15 @@ void hex::append_hex_vertice(sf::VertexArray & target,
 }
 
 
+void hex::append_hex_vertice(sf::VertexArray & target,
+                             Coord const & coord,
+                             float thickness,
+                             sf::Color color)
+{
+	append_hex_vertice(target, default_layout, coord, thickness, color);
+}
+
+
 
 
 
@@ -340,4 +349,15 @@ void hex::append_hex_vertice(sf::VertexArray & target,
 	append_hex_vertice(target, layout, coord,
 	                   static_cast<int>(dir),
 	                   thickness, color_start, color_end);
+}
+
+
+void hex::append_hex_vertice(sf::VertexArray & target,
+                             Layout const & layout,
+                             Coord const & coord,
+                             float thickness,
+                             sf::Color color)
+{
+	for (int i = 0; i < 6; ++i)
+		append_hex_vertice(target, layout, coord, i, thickness, color, color);
 }

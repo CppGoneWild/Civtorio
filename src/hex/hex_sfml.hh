@@ -55,6 +55,11 @@ void append_hex_vertice(sf::VertexArray & target,
                         float thickness,
                         sf::Color color_start, sf::Color color_end);
 
+void append_hex_vertice(sf::VertexArray & target,
+                        Coord const & coord,
+                        float thickness,
+                        sf::Color color);
+
 
 
 
@@ -97,6 +102,12 @@ void append_hex_vertice(sf::VertexArray & target,
                         direction_t dir,
                         float thickness,
                         sf::Color color_start, sf::Color color_end);
+
+void append_hex_vertice(sf::VertexArray & target,
+                        Layout const & layout,
+                        Coord const & coord,
+                        float thickness,
+                        sf::Color color);
 
 
 
