@@ -15,14 +15,14 @@ SRC_IMPLOT = $(EXTERNAL)/implot/implot.cpp      \
              $(EXTERNAL)/implot/implot_demo.cpp
 
 
-SRC_EXTENSION = $(ROOT_SRC)/math_ext.cpp \
-                $(ROOT_SRC)/sfml_vector_ext.cpp
+SFML_EXT = $(ROOT_SRC)/math_ext.cpp \
+           $(ROOT_SRC)/sfml_ext/sfml_vector_ext.cpp
 
 
 NAME_DEMO_HEX = demo_hex.out
 SRC_DEMO_HEX  = $(SRC_IMGUI) \
                 $(SRC_IMPLOT) \
-                $(SRC_EXTENSION) \
+                $(SFML_EXT) \
                 \
                 hex.cpp \
                 hex_imgui.cpp \

@@ -1,7 +1,7 @@
 #include "hex_sfml.hh"
 
 
-#include "sfml_vector_ext.hh"
+#include "sfml_ext/sfml_vector_ext.hh"
 
 #include <cmath>
 #include <cassert>
