@@ -91,12 +91,12 @@ namespace hex
 
 enum class direction_t
 {
-	East      = 0,
-	NorthEast = 1,
-	NorthWest = 2,
-	West      = 3,
-	SouthWest = 4,
-	SouthEast = 5,
+	NorthEast = 0,
+	NorthWest = 1,
+	West      = 2,
+	SouthWest = 3,
+	SouthEast = 4,
+	East      = 5,
 	__MAX
 };
 

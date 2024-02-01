@@ -16,19 +16,23 @@
 
 
 
-static const std::array<hex::Coord, 6> coord_directions = {hex::Coord( 1,  0, -1),  // East
-                                                           hex::Coord( 1, -1,  0),  // NorthEast
-                                                           hex::Coord( 0, -1,  1),  // NorthWest
-                                                           hex::Coord(-1,  0,  1),  // West
-                                                           hex::Coord(-1,  1,  0),  // SouthWest
-                                                           hex::Coord( 0,  1, -1)}; // SouthEast
+static const std::array<hex::Coord, 6> coord_directions = {
+                                                            hex::Coord( 1, -1,  0),  // NorthEast
+                                                            hex::Coord( 0, -1,  1),  // NorthWest
+                                                            hex::Coord(-1,  0,  1),  // West
+                                                            hex::Coord(-1,  1,  0),  // SouthWest
+                                                            hex::Coord( 0,  1, -1),  // SouthEast
+                                                            hex::Coord( 1,  0, -1),  // East
+                                                           }; 
 
-static const std::array<hex::Coord, 6> coord_diagonals = {hex::Coord( 2, -1, -1),  // East - NorthEast
-                                                          hex::Coord( 1, -2,  1),  // North
-                                                          hex::Coord(-1, -1,  2),  // West - NorthWest
-                                                          hex::Coord(-2,  1,  1),  // West - SouthWest
-                                                          hex::Coord(-1,  2, -1),  // South
-                                                          hex::Coord( 1,  1, -2)}; // Est - SouthEast
+static const std::array<hex::Coord, 6> coord_diagonals = {
+                                                           hex::Coord( 2, -1, -1),  // East - NorthEast
+                                                           hex::Coord( 1, -2,  1),  // North
+                                                           hex::Coord(-1, -1,  2),  // West - NorthWest
+                                                           hex::Coord(-2,  1,  1),  // West - SouthWest
+                                                           hex::Coord(-1,  2, -1),  // South
+                                                           hex::Coord( 1,  1, -2) // Est - SouthEast
+                                                         };
 
 
 
