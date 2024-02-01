@@ -15,6 +15,9 @@
 #include <cassert>
 
 
+class VectorArray;
+
+
 template <class T>
 sf::Vector2<T> & operator*=(sf::Vector2<T> & left, sf::Vector2<T> const & right);
 template <class T>
@@ -118,6 +121,39 @@ std::size_t display_grid(sf::VertexArray & res,
                          sf::Vector2i const & cell_nbr,
                          sf::Color color);
 
+
+
+
+
+// Will reserve memory, theoricaly faster than sf::VertexArray overload
+std::size_t display_vector(VectorArray & res,
+                           sf::Vector2f const & pos, sf::Vector2f const & v,
+                           sf::Color h_color, sf::Color v_color,
+                           dbg_smfl_opt opt = No_opt);
+
+
+
+// Will reserve memory, theoricaly faster than sf::VertexArray overload
+std::size_t display_vector(VectorArray & res,
+                           sf::Vector2f const & pos, sf::Vector2f const & v,
+                           sf::Color color);
+
+
+
+// Will reserve memory, theoricaly faster than sf::VertexArray overload
+std::size_t display_position(VectorArray & res,
+                             sf::Vector2f const & pos,
+                             sf::Color color,
+                             float size = 2.5);
+
+
+
+// Will reserve memory, theoricaly faster than sf::VertexArray overload
+std::size_t display_grid(VectorArray & res,
+                         sf::Vector2f const & origin,
+                         sf::Vector2f const & cell_size,
+                         sf::Vector2i const & cell_nbr,
+                         sf::Color color);
 
 
 

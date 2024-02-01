@@ -11,6 +11,8 @@
 #include <SFML/System.hpp>
 #include <SFML/Window.hpp>
 
+#include "sfml_ext/sfml_vector_array.hh"
+
 
 
 struct cursor_t
@@ -50,7 +52,7 @@ struct cursor_t
     hex::OffsetCoord off_coord;
     hex::Coord coord;
 
-    sf::VertexArray to_draw;
+    VectorArray to_draw;
     sf::Color color_to_draw;
 };
 
@@ -64,7 +66,7 @@ int main()
     ImPlot::CreateContext();
 
     cursor_t cursor;
-    sf::VertexArray array(sf::Triangles);
+    VectorArray array(sf::Triangles);
 
     sf::Clock deltaClock;
     while (window.isOpen())

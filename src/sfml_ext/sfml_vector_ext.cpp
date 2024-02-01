@@ -1,4 +1,5 @@
 #include "sfml_vector_ext.hh"
+#include "sfml_vector_array.hh"
 
 #include "imgui.h"
 
@@ -172,6 +173,208 @@ std::size_t display_grid(sf::VertexArray & res,
 
 	return (nb_vertex_added);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+std::size_t display_vector(VectorArray & res,
+                           sf::Vector2f const & pos, sf::Vector2f const & v,
+                           sf::Color h_color, sf::Color v_color,
+                           dbg_smfl_opt opt)
+{
+	assert(sf::Lines == res.getPrimitiveType());
+
+	res.reserve(res.size() + ((opt == Left_tilt || opt == Right_tilt) ? (4 + 4) : (4)));
+
+	sf::Vertex h_origin(pos, h_color);
+	sf::Vertex h_end(sf::Vector2f(pos.x + v.x, pos.y), h_color);
+
+	res.append(h_origin);
+	res.append(h_end);
+
+	sf::Vertex v_origin(pos, v_color);
+	sf::Vertex v_end(sf::Vector2f(pos.x, pos.y + v.y), v_color);
+
+	res.append(v_origin);
+	res.append(v_end);
+
+
+	if (opt == Left_tilt || opt == Right_tilt)
+	{
+			sf::Vertex th_origin(h_end);
+			sf::Vertex th_end(sf::Vector2f(th_origin.position.x, th_origin.position.y + (opt == Left_tilt ? 3 : -3)), h_color);
+
+			res.append(th_origin);
+			res.append(th_end);
+
+			sf::Vertex tv_origin(v_end);
+			sf::Vertex tv_end(sf::Vector2f(tv_origin.position.x + (opt == Left_tilt ? 3 : -3), tv_origin.position.y), v_color);
+
+			res.append(tv_origin);
+			res.append(tv_end);
+
+		return (8);
+	}
+
+	return (4);
+}
+
+
+
+
+
+
+std::size_t display_vector(VectorArray & res,
+                           sf::Vector2f const & pos, sf::Vector2f const & v,
+                           sf::Color color)
+{
+	assert(sf::Lines == res.getPrimitiveType());
+
+	res.reserve(res.size() + 2);
+
+	res.append(sf::Vertex(pos, color));
+	res.append(sf::Vertex(pos + v, color));
+
+	return (2);
+}
+
+
+
+
+
+
+std::size_t display_position(VectorArray & res,
+                             sf::Vector2f const & pos,
+                             sf::Color color,
+                             float size)
+{
+	assert(sf::Lines == res.getPrimitiveType());
+
+	res.reserve(res.size() + 8);
+
+	//AB
+	res.append(sf::Vertex(pos + sf::Vector2f(-size,  size), color));
+	res.append(sf::Vertex(pos + sf::Vector2f( size,  size), color));
+
+	//BC
+	res.append(sf::Vertex(pos + sf::Vector2f( size,  size), color));
+	res.append(sf::Vertex(pos + sf::Vector2f( size, -size), color));
+
+	//CD
+	res.append(sf::Vertex(pos + sf::Vector2f( size, -size), color));
+	res.append(sf::Vertex(pos + sf::Vector2f(-size, -size), color));
+
+	//DA
+	res.append(sf::Vertex(pos + sf::Vector2f(-size, -size), color));
+	res.append(sf::Vertex(pos + sf::Vector2f(-size,  size), color));
+
+	return (8);
+}
+
+
+
+
+
+
+
+
+
+
+std::size_t display_grid_one_cell(VectorArray & res,
+                                  sf::Vector2f const & origin,
+                                  sf::Vector2f const & cell_size,
+                                  sf::Color color)
+{
+	assert(sf::Lines == res.getPrimitiveType());
+
+
+	//AB
+	res.append(sf::Vertex(origin, color));
+	res.append(sf::Vertex(origin + sf::Vector2f(cell_size.x, 0), color));
+
+	//BC
+	res.append(sf::Vertex(origin + sf::Vector2f(cell_size.x, 0), color));
+	res.append(sf::Vertex(origin + cell_size, color));
+
+	//CD
+	res.append(sf::Vertex(origin + cell_size, color));
+	res.append(sf::Vertex(origin + sf::Vector2f(0, cell_size.y), color));
+
+	//DA
+	res.append(sf::Vertex(origin + sf::Vector2f(0, cell_size.y), color));
+	res.append(sf::Vertex(origin, color));
+
+	return (8);
+}
+
+std::size_t display_grid(VectorArray & res,
+                         sf::Vector2f const & origin,
+                         sf::Vector2f const & cell_size,
+                         sf::Vector2i const & cell_nbr,
+                         sf::Color color)
+{
+	assert(sf::Lines == res.getPrimitiveType());
+	assert(cell_nbr.x >= 0);
+	assert(cell_nbr.y >= 0);
+
+	std::size_t nb_vertex_added = 0;
+
+	res.reserve(res.size() + cell_nbr.x * cell_nbr.y * 8);
+
+	for (int i = 0; i < cell_nbr.x; ++i)
+	{
+		for (int ii = 0; ii < cell_nbr.y; ++ii)
+		{
+			sf::Vector2f tmp = origin;
+			tmp.x += cell_size.x * static_cast<float>(i);
+			tmp.y += cell_size.y * static_cast<float>(ii);
+			nb_vertex_added += display_grid_one_cell(res, tmp, cell_size, color);
+		}
+	}
+
+	return (nb_vertex_added);
+}
+
+
+
+
+
+
 
 
 

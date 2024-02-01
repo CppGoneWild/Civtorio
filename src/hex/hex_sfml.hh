@@ -13,6 +13,8 @@
 
 #include "hex.hh"
 
+class VectorArray;
+
 
 
 
@@ -38,6 +40,8 @@ void to_pixel(Coord const &, std::vector<sf::Vector2f> &);
 void from_pixel(sf::Vector2f const &, Coord & result);
 void from_pixel(sf::Vector2f const &, FractionalCoord & result);
 
+
+
 void append_hex(sf::VertexArray & target,
                 Coord const & coord,
                 sf::Vector2f const & texture_center,
@@ -62,6 +66,35 @@ void append_hex_vertice(sf::VertexArray & target,
 
 
 
+// Will reserve memory, theoricaly faster than sf::VertexArray overload
+void append_hex(VectorArray & target,
+                Coord const & coord,
+                sf::Vector2f const & texture_center,
+                std::array<sf::Vector2f, 6> const & texture_corner);
+// Will reserve memory, theoricaly faster than sf::VertexArray overload
+void append_hex(VectorArray & target, Coord const & coord, sf::Color);
+
+// Will reserve memory, theoricaly faster than sf::VertexArray overload
+void append_hex_vertice(VectorArray & target,
+                        Coord const & coord,
+                        int dir,
+                        float thickness,
+                        sf::Color color_start, sf::Color color_end);
+// Will reserve memory, theoricaly faster than sf::VertexArray overload
+void append_hex_vertice(VectorArray & target,
+                        Coord const & coord,
+                        direction_t dir,
+                        float thickness,
+                        sf::Color color_start, sf::Color color_end);
+
+// Will reserve memory, theoricaly faster than sf::VertexArray overload
+void append_hex_vertice(VectorArray & target,
+                        Coord const & coord,
+                        float thickness,
+                        sf::Color color);
+
+
+
 
 // With custom layout
 
@@ -78,6 +111,8 @@ void to_pixel(Layout const &, Coord const &, std::vector<sf::Vector2f> &);
 
 void from_pixel(Layout const &, sf::Vector2f const &, Coord & result);
 void from_pixel(Layout const &, sf::Vector2f const &, FractionalCoord & result);
+
+
 
 void append_hex(sf::VertexArray & target,
                 Layout const & layout,
@@ -104,6 +139,43 @@ void append_hex_vertice(sf::VertexArray & target,
                         sf::Color color_start, sf::Color color_end);
 
 void append_hex_vertice(sf::VertexArray & target,
+                        Layout const & layout,
+                        Coord const & coord,
+                        float thickness,
+                        sf::Color color);
+
+
+
+// Will reserve memory, theoricaly faster than sf::VertexArray overload
+void append_hex(VectorArray & target,
+                Layout const & layout,
+                Coord const & coord,
+                sf::Vector2f const & texture_center,
+                std::array<sf::Vector2f, 6> const & texture_corner);
+
+// Will reserve memory, theoricaly faster than sf::VertexArray overload
+void append_hex(VectorArray & target,
+                Layout const & layout,
+                Coord const & coord,
+                sf::Color);
+
+// Will reserve memory, theoricaly faster than sf::VertexArray overload
+void append_hex_vertice(VectorArray & target,
+                        Layout const & layout,
+                        Coord const & coord,
+                        int dir,
+                        float thickness,
+                        sf::Color color_start, sf::Color color_end);
+// Will reserve memory, theoricaly faster than sf::VertexArray overload
+void append_hex_vertice(VectorArray & target,
+                        Layout const & layout,
+                        Coord const & coord,
+                        direction_t dir,
+                        float thickness,
+                        sf::Color color_start, sf::Color color_end);
+
+// Will reserve memory, theoricaly faster than sf::VertexArray overload
+void append_hex_vertice(VectorArray & target,
                         Layout const & layout,
                         Coord const & coord,
                         float thickness,

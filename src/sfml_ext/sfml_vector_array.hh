@@ -15,7 +15,12 @@
 
 
 
-
+/** This class is an upgrade of sf::VertexArray.
+ * 
+ * In addition to all behavior of sf::VertexArray,
+ * you can use some of std::vector capacities such as
+ * reserve, resize and access underlying container.
+ */
 class VectorArray : public sf::Drawable
 {
 public:
@@ -40,6 +45,9 @@ public:
 
   std::vector<sf::Vertex> const & vertices() const;
   std::vector<sf::Vertex> & vertices();
+
+  sf::Vertex const * data() const;
+  sf::Vertex * data();
 
 private:
   virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;

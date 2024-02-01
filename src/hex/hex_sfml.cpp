@@ -2,6 +2,7 @@
 
 
 #include "sfml_ext/sfml_vector_ext.hh"
+#include "sfml_ext/sfml_vector_array.hh"
 
 #include <cmath>
 #include <cassert>
@@ -12,6 +13,30 @@
 
 
 static void __append_segment(sf::VertexArray & target,
+                             sf::Vector2f const & start, sf::Vector2f const & end,
+                             float thickness,
+                             sf::Color color_start, sf::Color color_end)
+{
+	assert(sf::Triangles == target.getPrimitiveType());
+
+	sf::Vector2f u_line = get_unitary_vector(end - start);
+	u_line = sf::Vector2f(u_line.y, u_line.x);
+
+	target.append(sf::Vertex(start + ( u_line * thickness), color_start));
+	target.append(sf::Vertex(start + (-u_line * thickness), color_start));
+	target.append(sf::Vertex(end   + (-u_line * thickness), color_end));
+
+	target.append(sf::Vertex(end   + (-u_line * thickness), color_end));
+	target.append(sf::Vertex(end   + ( u_line * thickness), color_end));
+	target.append(sf::Vertex(start + ( u_line * thickness), color_start));
+}
+
+
+
+
+
+
+static void __append_segment(VectorArray & target,
                              sf::Vector2f const & start, sf::Vector2f const & end,
                              float thickness,
                              sf::Color color_start, sf::Color color_end)
@@ -143,6 +168,58 @@ void hex::append_hex_vertice(sf::VertexArray & target,
 
 
 void hex::append_hex_vertice(sf::VertexArray & target,
+                             Coord const & coord,
+                             float thickness,
+                             sf::Color color)
+{
+	append_hex_vertice(target, default_layout, coord, thickness, color);
+}
+
+
+
+
+
+
+
+void hex::append_hex(VectorArray & target,
+                     Coord const & coord,
+                     sf::Vector2f const & texture_center,
+                     std::array<sf::Vector2f, 6> const & texture_corner)
+{
+	append_hex(target, default_layout, coord, texture_center, texture_corner);
+}
+
+
+void hex::append_hex(VectorArray & target, Coord const & coord, sf::Color color)
+{
+	append_hex(target, default_layout, coord, color);
+}
+
+
+void hex::append_hex_vertice(VectorArray & target,
+                             Coord const & coord,
+                             int dir,
+                             float thickness,
+                             sf::Color color_start, sf::Color color_end)
+{
+	append_hex_vertice(target, default_layout, coord,
+	                   static_cast<int>(dir),
+	                   thickness, color_start, color_end);
+}
+
+void hex::append_hex_vertice(VectorArray & target,
+                             Coord const & coord,
+                             direction_t dir,
+                             float thickness,
+                             sf::Color color_start, sf::Color color_end)
+{
+	append_hex_vertice(target, default_layout, coord,
+	                   static_cast<int>(dir),
+	                   thickness, color_start, color_end);
+}
+
+
+void hex::append_hex_vertice(VectorArray & target,
                              Coord const & coord,
                              float thickness,
                              sf::Color color)
@@ -358,6 +435,122 @@ void hex::append_hex_vertice(sf::VertexArray & target,
                              float thickness,
                              sf::Color color)
 {
+	for (int i = 0; i < 6; ++i)
+		append_hex_vertice(target, layout, coord, i, thickness, color, color);
+}
+
+
+
+
+
+
+
+
+
+void hex::append_hex(VectorArray & target,
+                     Layout const & layout,
+                     Coord const & coord,
+                     sf::Vector2f const & /*texture_center*/,
+                     std::array<sf::Vector2f, 6> const & texture_corner)
+{
+	assert(sf::Triangles == target.getPrimitiveType());
+
+	target.reserve(target.size() + 4 * 3);
+
+	sf::Vector2f hex_center = to_pixel(layout, coord);
+
+	target.append(sf::Vertex(hex_center + corner(layout, 1), texture_corner[1]));
+	target.append(sf::Vertex(hex_center + corner(layout, 2), texture_corner[2]));
+	target.append(sf::Vertex(hex_center + corner(layout, 3), texture_corner[3]));
+
+	target.append(sf::Vertex(hex_center + corner(layout, 1), texture_corner[1]));
+	target.append(sf::Vertex(hex_center + corner(layout, 3), texture_corner[3]));
+	target.append(sf::Vertex(hex_center + corner(layout, 4), texture_corner[4]));
+
+	target.append(sf::Vertex(hex_center + corner(layout, 1), texture_corner[1]));
+	target.append(sf::Vertex(hex_center + corner(layout, 4), texture_corner[4]));
+	target.append(sf::Vertex(hex_center + corner(layout, 0), texture_corner[0]));
+
+	target.append(sf::Vertex(hex_center + corner(layout, 0), texture_corner[0]));
+	target.append(sf::Vertex(hex_center + corner(layout, 4), texture_corner[4]));
+	target.append(sf::Vertex(hex_center + corner(layout, 5), texture_corner[5]));
+}
+
+void hex::append_hex(VectorArray & target,
+                     Layout const & layout,
+                     Coord const & coord,
+                     sf::Color color)
+{
+	assert(sf::Triangles == target.getPrimitiveType());
+
+	sf::Vector2f hex_center = to_pixel(layout, coord);
+
+	target.reserve(target.size() + 4 * 3);
+
+	target.append(sf::Vertex(hex_center + corner(layout, 1), color));
+	target.append(sf::Vertex(hex_center + corner(layout, 2), color));
+	target.append(sf::Vertex(hex_center + corner(layout, 3), color));
+
+	target.append(sf::Vertex(hex_center + corner(layout, 1), color));
+	target.append(sf::Vertex(hex_center + corner(layout, 3), color));
+	target.append(sf::Vertex(hex_center + corner(layout, 4), color));
+
+	target.append(sf::Vertex(hex_center + corner(layout, 1), color));
+	target.append(sf::Vertex(hex_center + corner(layout, 4), color));
+	target.append(sf::Vertex(hex_center + corner(layout, 0), color));
+
+	target.append(sf::Vertex(hex_center + corner(layout, 0), color));
+	target.append(sf::Vertex(hex_center + corner(layout, 4), color));
+	target.append(sf::Vertex(hex_center + corner(layout, 5), color));
+}
+
+
+
+
+void hex::append_hex_vertice(VectorArray & target,
+                             Layout const & layout,
+                             Coord const & coord,
+                             int dir,
+                             float thickness,
+                             sf::Color color_start, sf::Color color_end)
+{
+	sf::Vector2f center = to_pixel(coord);
+	sf::Vector2f tmp[2];
+
+	vertice(layout, dir, tmp);
+
+	tmp[0] += center;
+	tmp[1] += center;
+
+	target.reserve(target.size() + 2 * 3);
+
+	__append_segment(target, tmp[0], tmp[1], thickness, color_start, color_end);
+}
+
+void hex::append_hex_vertice(VectorArray & target,
+                             Layout const & layout,
+                             Coord const & coord,
+                             direction_t dir,
+                             float thickness,
+                             sf::Color color_start, sf::Color color_end)
+{
+
+	target.reserve(target.size() + 2 * 3);
+
+	append_hex_vertice(target, layout, coord,
+	                   static_cast<int>(dir),
+	                   thickness, color_start, color_end);
+}
+
+
+void hex::append_hex_vertice(VectorArray & target,
+                             Layout const & layout,
+                             Coord const & coord,
+                             float thickness,
+                             sf::Color color)
+{
+	target.reserve(target.size() + 2 * 3 * 6);
+
 	for (int i = 0; i < 6; ++i)
 		append_hex_vertice(target, layout, coord, i, thickness, color, color);
 }

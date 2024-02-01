@@ -85,6 +85,17 @@ std::vector<sf::Vertex> & VectorArray::vertices()
 }
 
 
+sf::Vertex const * VectorArray::data() const
+{
+	return (m_vertices.data());
+}
+
+sf::Vertex * VectorArray::data()
+{
+	return (m_vertices.data());
+}
+
+
 void VectorArray::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
 	if (m_vertices.size())

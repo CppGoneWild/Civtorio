@@ -16,6 +16,7 @@ SRC_IMPLOT = $(EXTERNAL)/implot/implot.cpp      \
 
 
 SFML_EXT = $(ROOT_SRC)/math_ext.cpp \
+           $(ROOT_SRC)/sfml_ext/sfml_vector_array.cpp \
            $(ROOT_SRC)/sfml_ext/sfml_vector_ext.cpp
 
 
