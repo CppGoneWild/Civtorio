@@ -86,7 +86,7 @@ std::ostream & operator<<(std::ostream & os, sf::Vector3<T> const &);
 
 
 
-enum dbg_smfl_opt
+enum dbg_sfml_opt
 {
 	No_opt = 0
 , Left_tilt
@@ -98,7 +98,7 @@ enum dbg_smfl_opt
 std::size_t display_vector(sf::VertexArray & res,
                            sf::Vector2f const & pos, sf::Vector2f const & v,
                            sf::Color h_color, sf::Color v_color,
-                           dbg_smfl_opt opt = No_opt);
+                           dbg_sfml_opt opt = No_opt);
 
 
 
@@ -129,7 +129,7 @@ std::size_t display_grid(sf::VertexArray & res,
 std::size_t display_vector(VectorArray & res,
                            sf::Vector2f const & pos, sf::Vector2f const & v,
                            sf::Color h_color, sf::Color v_color,
-                           dbg_smfl_opt opt = No_opt);
+                           dbg_sfml_opt opt = No_opt);
 
 
 
