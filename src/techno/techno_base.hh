@@ -5,10 +5,23 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <set>
+#include <map>
 
 
 #include "techno_types.hh"
+
+#include "win_mngr/show_info.hh"
+
+
+
+/*******************************************************************************
+                   ______      __                        _
+                  / ____/___ _/ /____  ____ _____  _____(_)__
+                 / /   / __ `/ __/ _ \/ __ `/ __ \/ ___/ / _ \
+                / /___/ /_/ / /_/  __/ /_/ / /_/ / /  / /  __/
+                \____/\__,_/\__/\___/\__, /\____/_/  /_/\___/
+                                    /____/
+*******************************************************************************/
 
 
 
@@ -16,7 +29,7 @@ namespace techno
 {
 
 
-class Categorie
+class Categorie : public win_mngr::I_ShowInfo
 {
 public:
 	using id_t = std::uint64_t;
@@ -24,19 +37,28 @@ public:
 	Categorie()                  = default;
 	Categorie(Categorie const &) = default;
 	Categorie(Categorie &&)      = default;
-	~Categorie()                 = default;
+	virtual ~Categorie() = default;
 
 	Categorie & operator=(Categorie const &) = default;
 	Categorie & operator=(Categorie &&)      = default;
 
-	Categorie(id_t, std::string const &);
+	Categorie(id_t, std::string const &, std::string const & = "");
 
 	id_t id() const;
 	std::string const & name() const;
+	std::string const & description() const;
 
-private:	
+protected:
+	//// Called by class ShowInfoWindows
+	//
+	virtual void _display_show_info_imgui() const;
+	//
+	/////////////////////////////
+
+private:
 	id_t m_id = 0;
 	std::string m_name;
+	std::string m_description;
 };
 
 
@@ -55,26 +77,40 @@ bool operator>=(techno::Categorie const &, techno::Categorie const &);
 
 
 
-bool operator==(techno::Categorie const &, techno::Categorie::id_t);
-bool operator!=(techno::Categorie const &, techno::Categorie::id_t);
-bool operator< (techno::Categorie const &, techno::Categorie::id_t);
-bool operator> (techno::Categorie const &, techno::Categorie::id_t);
-bool operator<=(techno::Categorie const &, techno::Categorie::id_t);
-bool operator>=(techno::Categorie const &, techno::Categorie::id_t);
+bool operator==(techno::Categorie const &, techno::Categorie::id_t const);
+bool operator!=(techno::Categorie const &, techno::Categorie::id_t const);
+bool operator< (techno::Categorie const &, techno::Categorie::id_t const);
+bool operator> (techno::Categorie const &, techno::Categorie::id_t const);
+bool operator<=(techno::Categorie const &, techno::Categorie::id_t const);
+bool operator>=(techno::Categorie const &, techno::Categorie::id_t const);
 
-bool operator==(techno::Categorie::id_t, techno::Categorie const &);
-bool operator!=(techno::Categorie::id_t, techno::Categorie const &);
-bool operator< (techno::Categorie::id_t, techno::Categorie const &);
-bool operator> (techno::Categorie::id_t, techno::Categorie const &);
-bool operator<=(techno::Categorie::id_t, techno::Categorie const &);
-bool operator>=(techno::Categorie::id_t, techno::Categorie const &);
-
-
+bool operator==(techno::Categorie::id_t const, techno::Categorie const &);
+bool operator!=(techno::Categorie::id_t const, techno::Categorie const &);
+bool operator< (techno::Categorie::id_t const, techno::Categorie const &);
+bool operator> (techno::Categorie::id_t const, techno::Categorie const &);
+bool operator<=(techno::Categorie::id_t const, techno::Categorie const &);
+bool operator>=(techno::Categorie::id_t const, techno::Categorie const &);
 
 
 
 
 
+
+
+
+
+
+
+
+
+/*******************************************************************************
+                ____                ______          __
+               / __ )____ _________/_  __/__  _____/ /_  ____  ____
+              / __  / __ `/ ___/ _ \/ / / _ \/ ___/ __ \/ __ \/ __ \
+             / /_/ / /_/ (__  )  __/ / /  __/ /__/ / / / / / / /_/ /
+            /_____/\__,_/____/\___/_/  \___/\___/_/ /_/_/ /_/\____/
+            
+*******************************************************************************/
 
 
 
@@ -82,7 +118,7 @@ namespace techno
 {
 
 
-class BaseTechno
+class BaseTechno : public win_mngr::I_ShowInfo
 {
 public:
 	struct Prerequist
@@ -96,7 +132,7 @@ public:
 	BaseTechno(BaseTechno &&)                  = default;
 	BaseTechno & operator=(BaseTechno const &) = default;
 	BaseTechno & operator=(BaseTechno &&)      = default;
-	~BaseTechno()                              = default;
+	virtual ~BaseTechno()                      = default;
 
 	BaseTechno(techno_id_t, Categorie::id_t,
 	           std::string const &, std::string const &,
@@ -113,6 +149,13 @@ public:
 
 	int base_cost() const;
 	int multiplier() const;
+
+protected:
+	//// Called by class ShowInfoWindows
+	//
+	virtual void _display_show_info_imgui() const;
+	//
+	/////////////////////////////
 
 private:
 
@@ -144,22 +187,36 @@ bool operator>=(techno::BaseTechno const &, techno::BaseTechno const &);
 
 
 
-bool operator==(techno::BaseTechno const &, techno::techno_id_t);
-bool operator!=(techno::BaseTechno const &, techno::techno_id_t);
-bool operator< (techno::BaseTechno const &, techno::techno_id_t);
-bool operator> (techno::BaseTechno const &, techno::techno_id_t);
-bool operator<=(techno::BaseTechno const &, techno::techno_id_t);
-bool operator>=(techno::BaseTechno const &, techno::techno_id_t);
+bool operator==(techno::BaseTechno const &, techno::techno_id_t const);
+bool operator!=(techno::BaseTechno const &, techno::techno_id_t const);
+bool operator< (techno::BaseTechno const &, techno::techno_id_t const);
+bool operator> (techno::BaseTechno const &, techno::techno_id_t const);
+bool operator<=(techno::BaseTechno const &, techno::techno_id_t const);
+bool operator>=(techno::BaseTechno const &, techno::techno_id_t const);
 
-bool operator==(techno::techno_id_t, techno::BaseTechno const &);
-bool operator!=(techno::techno_id_t, techno::BaseTechno const &);
-bool operator< (techno::techno_id_t, techno::BaseTechno const &);
-bool operator> (techno::techno_id_t, techno::BaseTechno const &);
-bool operator<=(techno::techno_id_t, techno::BaseTechno const &);
-bool operator>=(techno::techno_id_t, techno::BaseTechno const &);
+bool operator==(techno::techno_id_t const, techno::BaseTechno const &);
+bool operator!=(techno::techno_id_t const, techno::BaseTechno const &);
+bool operator< (techno::techno_id_t const, techno::BaseTechno const &);
+bool operator> (techno::techno_id_t const, techno::BaseTechno const &);
+bool operator<=(techno::techno_id_t const, techno::BaseTechno const &);
+bool operator>=(techno::techno_id_t const, techno::BaseTechno const &);
 
 
 
+
+
+
+
+
+
+/*******************************************************************************
+              ______                                      ____  ____
+             / ____/___  ____ ___  ____ ___  ____  ____  / __ \/ __ )
+            / /   / __ \/ __ `__ \/ __ `__ \/ __ \/ __ \/ / / / __  |
+           / /___/ /_/ / / / / / / / / / / / /_/ / / / / /_/ / /_/ /
+           \____/\____/_/ /_/ /_/_/ /_/ /_/\____/_/ /_/_____/_____/
+           
+*******************************************************************************/
 
 
 
@@ -176,11 +233,11 @@ public:
 	Categorie const * add(Categorie const &);
 	BaseTechno const * add(BaseTechno const &);
 
-	Categorie const * find(Categorie::id_t) const;
-	BaseTechno const * find(techno_id_t) const;
+	Categorie const * categorie(Categorie::id_t) const;
+	BaseTechno const * techno(techno_id_t) const;
 
-	std::set<Categorie> const & categories() const;
-	std::set<BaseTechno> const & techno() const;
+	std::map<Categorie::id_t, Categorie> const & categories() const;
+	std::map<techno_id_t, BaseTechno> const & techno() const;
 
 private:
 	CommonDB(CommonDB const &)             = delete;
@@ -188,8 +245,8 @@ private:
 	CommonDB & operator=(CommonDB const &) = delete;
 	CommonDB & operator=(CommonDB &&)      = delete;
 
-	std::set<Categorie> m_categories;
-	std::set<BaseTechno> m_techno;
+	std::map<Categorie::id_t, Categorie> m_categories;
+	std::map<techno_id_t, BaseTechno> m_techno;
 };
 
 
