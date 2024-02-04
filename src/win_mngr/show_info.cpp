@@ -51,7 +51,7 @@ bool win_mngr::I_ShowInfo::show_info_is_open() const
 	return (m_show_info_is_open);
 }
 
-void win_mngr::I_ShowInfo::show_info_open()
+void win_mngr::I_ShowInfo::show_info_open() const
 {
 	m_show_info_is_open = true;
 	show_info_windows._push_show_info_win(*this);

@@ -33,7 +33,7 @@ public:
 
 	std::string const & show_info_name() const;
 	bool show_info_is_open() const;
-	void show_info_open();
+	void show_info_open() const;
 
 protected:
 	//// Called by class ShowInfoWindows
