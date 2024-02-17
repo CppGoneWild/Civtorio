@@ -3,14 +3,19 @@
 
 
 #include <vector>
-#include <set>
 #include <map>
 #include <list>
 
 
 #include "techno_types.hh"
-#include "techno_base.hh"
 
+
+namespace techno
+{
+	class Categorie;
+	class BaseTechno;
+	class CommonDB;
+} // techno
 
 
 
@@ -23,6 +28,8 @@ class Techno
 public:
 	struct Prerequist
 	{
+		inline Prerequist(Techno const * t, int l) : tech(t), level(l) {}
+
 		Techno const * tech = nullptr;
 		int level = 0;
 	};
@@ -46,10 +53,10 @@ public:
 	double invest(double);
 
 private:	
-	Techno(Techno const &)             = delete;
-	Techno(Techno &&)                  = delete;
-	Techno & operator=(Techno const &) = delete;
-	Techno & operator=(BaseTechno &&)  = delete;
+	Techno(Techno const &)             = default;
+	Techno(Techno &&)                  = default;
+	Techno & operator=(Techno const &) = default;
+	Techno & operator=(Techno &&)      = default;
 
 	Techno(BaseTechno const &, Categorie const &);
 
@@ -132,14 +139,14 @@ public:
 	TechnoDB()  = default;
 	~TechnoDB() = default;
 
-	bool add(CommonDB const &);
+	void build(CommonDB const &);
 
 	Techno const * find(techno_id_t) const;
 
 	CommonDB const * common_db() const;
 
-	std::set<Techno> const & techno() const;
-	std::set<Techno> & techno();
+	std::map<techno_id_t, Techno> const & techno() const;
+	std::map<techno_id_t, Techno> & techno();
 
 private:
 	TechnoDB(TechnoDB const &)             = delete;
@@ -147,8 +154,8 @@ private:
 	TechnoDB & operator=(TechnoDB const &) = delete;
 	TechnoDB & operator=(TechnoDB &&)      = delete;
 
-	CommonDB const * m_common_db;
-	std::set<Techno> m_techno;
+	CommonDB const * m_common_db = nullptr;
+	std::map<techno_id_t, Techno> m_techno;
 };
 
 
@@ -161,7 +168,7 @@ private:
 
 
 
-
+/*
 
 
 namespace techno
@@ -240,6 +247,10 @@ private:
 
 
 } // techno
+
+*/
+
+
 
 
 

@@ -1,14 +1,17 @@
 #include "techno.hh"
 
 
+#include "techno_base.hh"
+#include "imgui.h"
 
+#include <cmath>
 
 
 
 
 static double __get_damp_factor(int step)
 {
-	static const damp_factor = -0.009274;
+	static const double damp_factor = -0.009274;
 
 	if (step == 0)
 		return (0.0);
@@ -31,17 +34,25 @@ static double __get_dampened_prod(int nbr_of_source)
 
 
 
-static double __next_level_cost(int base_cost, int multiplier, int level_target)
+static int __next_level_cost(int base_cost, int multiplier, int level_target)
 {
 	if (level_target >= 5)
 		return (0);
 
-	double res = base_cost;
-	for (int i = 1; i <= level_target; ++i)
-		res *= multiplier;
+	int res = base_cost * std::pow(multiplier, level_target);
+
 	return (res);
 }
 
+
+/*
+ * 0 : b
+ * 1 : b*m
+ * 2 : b*m*m
+ * 3 : b*m*m*m
+ * 4 : b*m*m*m*m
+ * 5 : b*m*m*m*m*m
+ */
 
 
 
@@ -64,7 +75,7 @@ techno::Categorie const * techno::Techno::categorie() const
 	return (m_categorie);
 }
 
-std::vector<Prerequist> const & techno::Techno::prerequists() const
+std::vector<techno::Techno::Prerequist> const & techno::Techno::prerequists() const
 {
 	return (m_prerequists);
 }
@@ -323,26 +334,30 @@ bool operator>=(techno::Techno const & lhs, techno::BaseTechno const & rhs)
 
 
 
-bool techno::TechnoDB::add(CommonDB const & db)
+void techno::TechnoDB::build(CommonDB const & db)
 {
+	assert(m_common_db == nullptr);
+	assert(m_techno.empty());
+
 	m_common_db = &db;
 
 	for (auto it = db.techno().cbegin(); it != db.techno().cend(); ++it)
 	{
-		Categorie const * cat = db.find(it->techno_id());
+		Categorie const * cat = db.categorie(it->second.categorie_id());
 		assert(cat);
-		m_techno.insert(Techno(*it, *cat));
+		m_techno[it->second.techno_id()] = Techno(it->second, *cat);
+
 	}
 
 	for (auto tech = m_techno.begin(); tech != m_techno.end(); ++tech)
 	{
-		auto const & base_prereq = tech->base()->prerequists();
+		auto const & base_prereq = tech->second.base()->prerequists();
 		
 		for (auto it_prereq = base_prereq.cbegin(); it_prereq != base_prereq.cend(); ++it_prereq)
 		{
-			auto & tech_found = m_techno.find(it_prereq->id);
+			auto const & tech_found = m_techno.find(it_prereq->id);
 			assert(tech_found != m_techno.end());
-			tech->m_prerequists.emplace_back(&(*tech_found), it_prereq->level);
+			tech->second.m_prerequists.emplace_back(&(tech_found->second), it_prereq->level);
 		}
 	}
 }
@@ -353,7 +368,7 @@ bool techno::TechnoDB::add(CommonDB const & db)
 techno::Techno const * techno::TechnoDB::find(techno_id_t id) const
 {
 	auto res = m_techno.find(id);
-	return (res == m_techno.cend() ? nullptr : &(*res));
+	return (res == m_techno.cend() ? nullptr : &(res->second));
 }
 
 
@@ -364,12 +379,12 @@ techno::CommonDB const * techno::TechnoDB::common_db() const
 	return (m_common_db);
 }
 
-std::set<techno::Techno> const & techno::TechnoDB::techno() const
+std::map<techno::techno_id_t, techno::Techno> const & techno::TechnoDB::techno() const
 {
 	return (m_techno);
 }
 
-std::set<techno::Techno> & techno::TechnoDB::techno()
+std::map<techno::techno_id_t, techno::Techno> & techno::TechnoDB::techno()
 {
 	return (m_techno);
 }
@@ -385,7 +400,7 @@ std::set<techno::Techno> & techno::TechnoDB::techno()
 
 
 
-
+/*
 
 
 
@@ -519,3 +534,4 @@ void techno::TechnoManager::advance_one_day()
 	}
 }
 
+*/

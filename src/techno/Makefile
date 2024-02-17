@@ -29,6 +29,7 @@ SRC_DEMO_TECHNO  = $(SRC_IMGUI) \
                    $(SRC_WIN_MNGR) \
                    \
                    techno_base.cpp \
+                   techno.cpp \
                    \
                    demo_techno.cpp
 OBJ_DEMO_TECHNO  = $(SRC_DEMO_TECHNO:.cpp=.o)

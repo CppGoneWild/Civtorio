@@ -23,7 +23,7 @@ techno::Categorie::Categorie(id_t id,
                              std::string const & d)
 : win_mngr::I_ShowInfo(n), m_id(id), m_name(n), m_description(d)
 {
-	assert(id);
+	assert(id); // ID can't be 0
 }
 
 techno::Categorie::id_t techno::Categorie::id() const
@@ -44,10 +44,34 @@ std::string const & techno::Categorie::description() const
 
 void techno::Categorie::_display_show_info_imgui() const
 {
-	ImGui::Text("Name : %s", name().c_str());
-	ImGui::Separator();
-	ImGui::Text("Description : ");
-	ImGui::TextWrapped("%s", description().c_str());
+	if (ImGui::BeginTable("ShowInfo", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_Borders))
+	{
+        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableSetupColumn("Data");
+
+        ImGui::TableNextRow();
+
+        ImGui::TableNextColumn();
+		ImGui::Text("Name");
+        ImGui::TableNextColumn();
+		ImGui::Text("%s", name().c_str());
+
+        ImGui::TableNextRow();
+
+        ImGui::TableNextColumn();
+		ImGui::Text("Description");
+        ImGui::TableNextColumn();
+		ImGui::TextWrapped("%s", description().c_str());
+
+        ImGui::TableNextRow();
+
+        ImGui::TableNextColumn();
+		ImGui::Text("Categorie ID");
+        ImGui::TableNextColumn();
+		ImGui::Text("%lu", id());
+
+        ImGui::EndTable();
+	}
 }
 
 
@@ -186,10 +210,10 @@ techno::BaseTechno::BaseTechno(techno_id_t tid, Categorie::id_t cid,
 , m_base_cost(cost)
 , m_multiplier(mult)
 {
-	assert(m_techno_id);
-	assert(m_categorie_id);
-	assert(m_base_cost);
-	assert(m_multiplier);
+	assert(m_techno_id);      // ID can't be 0
+	assert(m_categorie_id);   // ID can't be 0
+	assert(m_base_cost > 0);  // base_cost must be greater than 0
+	assert(m_multiplier > 0); // multiplier must be greater than 0
 }
 
 techno::techno_id_t techno::BaseTechno::techno_id() const
@@ -434,7 +458,7 @@ techno::Categorie const * techno::CommonDB::add(Categorie const & c)
 {
 	auto res = m_categories.emplace(c.id(), c);
 
-	assert(res.second);
+	assert(res.second); // Categorie ID already taken
 
 	return (&(res.first->second));
 }
@@ -443,7 +467,7 @@ techno::BaseTechno const * techno::CommonDB::add(BaseTechno const & t)
 {
 	auto res = m_techno.emplace(t.techno_id(), t);
 
-	assert(res.second);
+	assert(res.second); // BaseTechno ID already taken
 
 	return (&(res.first->second));
 }
