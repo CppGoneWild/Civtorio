@@ -3,6 +3,7 @@ CXX = clang++
 NAME_TEST = test.out
 SRC_TEST  = types.cpp \
             token.cpp \
+            ini.cpp \
             \
             test.cpp
 OBJ_TEST  = $(SRC_TEST:.cpp=.o)
