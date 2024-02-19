@@ -5,12 +5,15 @@
 #include "types.hh"
 
 
+#include <iostream>
+#include <string>
+#include <vector>
+
+
+
 
 namespace parser
 {
-
-
-
 
 
 
@@ -38,11 +41,13 @@ public:
 	void append(std::string const &, location_t const &);
 	void append(token_t const &);
 
+
 private:
 	location_t _location;
 	std::string _token;
 	type_t _type;
 };
+
 
 
 

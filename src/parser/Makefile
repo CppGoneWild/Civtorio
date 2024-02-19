@@ -2,7 +2,6 @@ CXX = clang++
 
 NAME_TEST = test.out
 SRC_TEST  = types.cpp \
-            ast.cpp \
             token.cpp \
             \
             test.cpp
