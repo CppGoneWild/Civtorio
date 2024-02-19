@@ -5,6 +5,7 @@
 
 
 #include <fstream>
+#include <list>
 
 
 
@@ -36,10 +37,16 @@ parser::ini::value_t::value_t(location_t const & loc,
 {}
 
 
-parser::ini::value_t::value_t(location_t const & loc, std::string &&)
+parser::ini::value_t::value_t(location_t const & loc, std::string && name)
+: _name(name)
+, _value()
+, _location(loc)
 {}
 
-parser::ini::value_t::value_t(location_t const & loc, std::string &&, std::string &&)
+parser::ini::value_t::value_t(location_t const & loc, std::string && name, std::string && value)
+: _name(name)
+, _value(value)
+, _location(loc)
 {}
 
 
@@ -73,23 +80,29 @@ parser::location_t const &  parser::ini::value_t::location() const
 
 
 
-parser::ini::section_t::section_t(location_t const &, std::vector<value_t> const &)
+parser::ini::section_t::section_t(location_t const & loc, std::vector<value_t> const & values)
 : _name()
-, _values()
-, _location()
+, _values(values)
+, _location(loc)
 {}
 
-parser::ini::section_t::section_t(location_t const &, std::string const &, std::vector<value_t> const &)
+parser::ini::section_t::section_t(location_t const & loc, std::string const & name, std::vector<value_t> const & values)
+: _name(name)
+, _values(values)
+, _location(loc)
+{}
+
+
+parser::ini::section_t::section_t(location_t const & loc, std::vector<value_t> && values)
 : _name()
-, _values()
-, _location()
+, _values(values)
+, _location(loc)
 {}
 
-
-parser::ini::section_t::section_t(location_t const &, std::vector<value_t> &&)
-{}
-
-parser::ini::section_t::section_t(location_t const &, std::string &&, std::vector<value_t> &&)
+parser::ini::section_t::section_t(location_t const & loc, std::string && name, std::vector<value_t> && values)
+: _name(name)
+, _values(values)
+, _location(loc)
 {}
 
 
@@ -132,6 +145,9 @@ static bool _is_line_empty_so_far(std::vector<parser::token_t> const & in, std::
 
 	return (true);
 }
+
+
+
 
 static void _concatenate_double_diese(std::vector<parser::token_t> & in)
 {
@@ -189,7 +205,8 @@ static void _remove_comment(std::vector<parser::token_t> & in)
 		for (; i < in.size() && in[i].type() != parser::token_t::EOL; ++i)
 			comment.append(in[i].token());
 
-		tmp.push_back(comment);
+		// discard comment
+		// tmp.push_back(comment);
 	}
 
 	std::swap(tmp, in);
@@ -198,8 +215,120 @@ static void _remove_comment(std::vector<parser::token_t> & in)
 
 
 
+static void _create_litteral(std::vector<parser::token_t> & in)
+{
+	std::vector<parser::token_t> tmp;
+	std::size_t i = 0;
+
+	while (i < in.size())
+	{
+		if (in[i].token() != "\"")
+		{
+			tmp.push_back(in[i++]);
+			continue;
+		}
+
+		parser::token_t litt("", in[i].location(), parser::token_t::LITTERAL);
+		++i;
+
+		for (;;)
+		{
+			if (in[i].token() == "\\")
+			{
+				if (++i < in.size())
+					litt.append(in[i++]);
+				else
+					throw parser::syntax_error("Escaped sequence ill-formed ", litt.location());
+				continue;
+			}
+
+			if (in[i].token() == "\"")
+				break ;
+
+			if (i >= in.size() || 
+			    in[i].type() == parser::token_t::COMMENT ||
+			    in[i].type() == parser::token_t::EOL)
+			{
+				throw parser::syntax_error("Litteral string ill-formed ", litt.location(),
+				                           parser::syntax_error("Missing closing '\"'", in[i].location()));
+			}
+			litt.append(in[i++].token());
+		}
+
+		++i;
+		tmp.push_back(litt);
+	}
+
+	std::swap(tmp, in);
+}
 
 
+
+static std::list<std::vector<parser::token_t>> _recreate_line_and_triml(std::vector<parser::token_t> const & in)
+{
+	std::list<std::vector<parser::token_t>> result;
+	std::vector<parser::token_t> current_line;
+
+	for (std::size_t i = 0; i < in.size(); ++i)
+	{
+		if (in[i].type() != parser::token_t::EOL)
+		{
+			if ((in[i].type() == parser::token_t::SEPARATOR && current_line.empty()) == false)
+				current_line.emplace_back(in[i]);
+			continue ;
+		}
+
+		if (current_line.empty() == false)
+			result.emplace_back(std::move(current_line));
+		current_line.clear();
+	}
+
+	return (result);
+}
+
+
+
+static std::vector<parser::token_t> __is_new_section(std::vector<parser::token_t> const & line)
+{
+	std::vector<parser::token_t> section_name;
+
+	std::list<parser::token_t> tmp(line.cbegin(), line.cend());
+
+	auto __trim_L = [&]()
+	{
+		while (tmp.size() > 0 && tmp.front().type() == parser::token_t::SEPARATOR)
+			tmp.pop_front();
+	};
+
+	auto __trim_R = [&]()
+	{
+		while (tmp.size() > 0 && tmp.back().type() == parser::token_t::SEPARATOR)
+			tmp.pop_back();
+	};
+
+	__trim_L();
+	if (tmp.size() > 0 && tmp.front().token() != "[")
+		return (section_name); // Not a section
+	tmp.pop_front();
+	__trim_L();
+
+	__trim_R();
+	if (tmp.back().token() != "]")
+		throw ; // Missing ]
+	tmp.pop_back();
+	__trim_R();
+
+	for (auto it = tmp.begin(); it != tmp.end(); ++it)
+	{
+		if (it->type() == parser::token_t::SEPARATOR &&
+		    (section_name.empty() == false ||
+		     section_name.back().type() == parser::token_t::SEPARATOR))
+			continue;
+		section_name.push_back(*it);
+	}
+
+	return (section_name);
+}
 
 
 
@@ -222,6 +351,8 @@ static void _remove_comment(std::vector<parser::token_t> & in)
 }
 
 
+#include <iostream>
+
 
 
 /*std::vector<section_t>*/ std::vector<parser::token_t>  parser::ini::from_stream(std::istream & is, location_t & loc)
@@ -229,6 +360,18 @@ static void _remove_comment(std::vector<parser::token_t> & in)
 	std::vector<token_t> tokens = tokenize_from_stream(is, loc);
 
 	_remove_comment(tokens);
+	_create_litteral(tokens);
+
+	std::list<std::vector<parser::token_t>> lines;
+
+	lines = _recreate_line_and_triml(tokens);
+
+	for (auto it = lines.begin(); it != lines.end(); ++it)
+	{
+		auto section_name = __is_new_section(*it);
+		if (section_name.empty() == false)
+			std::cout << "jdfnds3jnfsq3fnj" << std::endl;
+	}
 
 	return (tokens);
 }

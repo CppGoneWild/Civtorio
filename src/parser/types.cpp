@@ -34,8 +34,8 @@ parser::location_t::location_t(std::string const & f, std::size_t l, std::size_t
 
 std::ostream & operator<<(std::ostream & os, parser::location_t const & l)
 {
-     os << '"' << l.filename << "\":" << l.line << ':' << l.column;
-     return (os);
+	os << l.filename << ':' << l.line << ':' << l.column;
+	return (os);
 }
 
 
@@ -75,40 +75,43 @@ parser::syntax_error::syntax_error(std::string const & e,
 , error_str(e)
 , inner_errors(std::move(i.inner_errors))
 {
-	inner_errors.emplace_back(syntax_error(i.error_str, i.location));
+	inner_errors.emplace_back(std::move(i.error_str), std::move(i.location));
 }
 
 
 
 
-static void print(std::ostream & os, parser::syntax_error const & e)
+static void print_orig(std::ostream & os, parser::syntax_error const & e)
 {
-  os << e.location << " : " << e.error_str;
+	os << e.location << " : " << e.error_str << std::endl;
 }
+
+static void print_from(std::ostream & os, parser::syntax_error const & e)
+{
+	os << "\t" << "From (" << e.location << " : " << e.error_str << ")" << std::endl;
+}
+
 
 std::ostream & operator<<(std::ostream & os, parser::syntax_error const & s)
 {
-	if (s.inner_errors.empty() == false)
+	if (s.inner_errors.size() >= 1)
 	{
 		std::size_t i = s.inner_errors.size() - 1;
-		print(os, s.inner_errors[i]);
-		--i;
+		print_orig(os, s.inner_errors[i]);
 
-		for (; i >= 0; --i)
+
+		if (s.inner_errors.size() > 1)
 		{
-			os << "\t" << "Inside (";
-			print(os, s.inner_errors[i]);
-			os << ")" << std::endl;
+			--i;
+			for (; i >= 0; --i)
+				print_from(os, s.inner_errors[i]);
 		}
-		os << "\t" << "Inside (";
-		print(os, s);
-		os << ")" << std::endl;
-  }
-  else
-  {
-		print(os, s);
+		print_from(os, s);
+	}
+	else
+	{
+		print_orig(os, s);
   }
 
-
-   return (os);
+	return (os);
 }

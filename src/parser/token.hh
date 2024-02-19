@@ -21,7 +21,7 @@ namespace parser
 class token_t
 {
 public:
-	enum type_t { SEPARATOR, ALPHA_NUM, SPECIAL, EOL, COMMENT };
+	enum type_t { SEPARATOR, ALPHA_NUM, SPECIAL, EOL, COMMENT, LITTERAL };
 
 	token_t()               = default;
 	token_t(token_t const &) = default;
