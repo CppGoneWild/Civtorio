@@ -1,4 +1,4 @@
-#include "ast.hh"
+#include "token.hh"
 
 
 
@@ -35,10 +35,10 @@ int main()
 
 	try
 	{
-		tmp = parser::parse_from_file("testfile2.ini");
+		tmp = parser::tokenize_from_file("testfile2.ini");
 		print(tmp);
 		std::cout << std::endl << std::endl << std::endl << std::endl;
-		tmp = parser::parse_from_file("testfile.ini");
+		tmp = parser::tokenize_from_file("testfile.ini");
 		print(tmp);
 	}
 	catch (parser::syntax_error & e)
