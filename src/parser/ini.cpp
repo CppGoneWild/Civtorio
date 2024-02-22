@@ -4,124 +4,22 @@
 #include "token.hh"
 
 
+#include <iostream>
 #include <fstream>
 #include <list>
+#include <cassert>
 
 
 
 
 /*******************************************************************************
-                                 __               __
-                    _   ______ _/ /_  _____      / /_
-                   | | / / __ `/ / / / / _ \    / __/
-                   | |/ / /_/ / / /_/ /  __/   / /_
-                   |___/\__,_/_/\__,_/\___/____\__/
-                                         /_____/
+                     ____                  _
+                    / __ \____ ___________(_)___  ____ _
+                   / /_/ / __ `/ ___/ ___/ / __ \/ __ `/
+                  / ____/ /_/ / /  (__  ) / / / / /_/ /
+                 /_/    \__,_/_/  /____/_/_/ /_/\__, /
+                                               /____/
 *******************************************************************************/
-
-
-
-
-parser::ini::value_t::value_t(location_t const & loc, std::string const & name)
-: _name(name)
-, _value()
-, _location(loc)
-{}
-
-parser::ini::value_t::value_t(location_t const & loc,
-                              std::string const & name,
-                              std::string const & value)
-: _name(name)
-, _value(value)
-, _location(loc)
-{}
-
-
-parser::ini::value_t::value_t(location_t const & loc, std::string && name)
-: _name(name)
-, _value()
-, _location(loc)
-{}
-
-parser::ini::value_t::value_t(location_t const & loc, std::string && name, std::string && value)
-: _name(name)
-, _value(value)
-, _location(loc)
-{}
-
-
-std::string const & parser::ini::value_t::name() const
-{
-	return (_name);
-}
-
-std::string const & parser::ini::value_t::value() const
-{
-	return (_value);
-}
-
-parser::location_t const &  parser::ini::value_t::location() const
-{
-	return (_location);
-}
-
-
-
-
-/*******************************************************************************
-                                  __  _                 __
-                  ________  _____/ /_(_)___  ____      / /_
-                 / ___/ _ \/ ___/ __/ / __ \/ __ \    / __/
-                (__  )  __/ /__/ /_/ / /_/ / / / /   / /_
-               /____/\___/\___/\__/_/\____/_/ /_/____\__/
-                                               /_____/
-*******************************************************************************/
-
-
-
-
-parser::ini::section_t::section_t(location_t const & loc, std::vector<value_t> const & values)
-: _name()
-, _values(values)
-, _location(loc)
-{}
-
-parser::ini::section_t::section_t(location_t const & loc, std::string const & name, std::vector<value_t> const & values)
-: _name(name)
-, _values(values)
-, _location(loc)
-{}
-
-
-parser::ini::section_t::section_t(location_t const & loc, std::vector<value_t> && values)
-: _name()
-, _values(values)
-, _location(loc)
-{}
-
-parser::ini::section_t::section_t(location_t const & loc, std::string && name, std::vector<value_t> && values)
-: _name(name)
-, _values(values)
-, _location(loc)
-{}
-
-
-std::string const & parser::ini::section_t::name()
-{
-	return (_name);
-}
-
-std::vector<parser::ini::value_t> const & parser::ini::section_t::values()
-{
-	return (_values);
-}
-
-parser::location_t const & parser::ini::section_t::location()
-{
-	return (_location);
-}
-
-
 
 
 
@@ -288,90 +186,374 @@ static std::list<std::vector<parser::token_t>> _recreate_line_and_triml(std::vec
 
 
 
-static std::vector<parser::token_t> __is_new_section(std::vector<parser::token_t> const & line)
+
+
+
+
+
+/*******************************************************************************
+                              _____ __         __
+                             / __(_) /__      / /_
+                            / /_/ / / _ \    / __/
+                           / __/ / /  __/   / /_
+                          /_/ /_/_/\___/____\__/
+                                      /_____/
+*******************************************************************************/
+
+
+
+
+parser::ini::file_t::file_t(std::string const & filename)
+: _map()
 {
-	std::vector<parser::token_t> section_name;
+	bool result = parse(filename);
+	assert(result);
+}
 
-	std::list<parser::token_t> tmp(line.cbegin(), line.cend());
-
-	auto __trim_L = [&]()
-	{
-		while (tmp.size() > 0 && tmp.front().type() == parser::token_t::SEPARATOR)
-			tmp.pop_front();
-	};
-
-	auto __trim_R = [&]()
-	{
-		while (tmp.size() > 0 && tmp.back().type() == parser::token_t::SEPARATOR)
-			tmp.pop_back();
-	};
-
-	__trim_L();
-	if (tmp.size() > 0 && tmp.front().token() != "[")
-		return (section_name); // Not a section
-	tmp.pop_front();
-	__trim_L();
-
-	__trim_R();
-	if (tmp.back().token() != "]")
-		throw ; // Missing ]
-	tmp.pop_back();
-	__trim_R();
-
-	for (auto it = tmp.begin(); it != tmp.end(); ++it)
-	{
-		if (it->type() == parser::token_t::SEPARATOR &&
-		    (section_name.empty() == false ||
-		     section_name.back().type() == parser::token_t::SEPARATOR))
-			continue;
-		section_name.push_back(*it);
-	}
-
-	return (section_name);
+parser::ini::file_t::file_t(std::istream & stream_to_parse)
+: _map()
+{
+	bool result = parse(stream_to_parse);
+	assert(result);
 }
 
 
 
 
-/*std::vector<section_t>*/ std::vector<parser::token_t>  parser::ini::from_file(std::string const & fname)
+bool parser::ini::file_t::parse(std::string const & fname)
 {
-	std::fstream file;
-	//std::vector<parser::ini::section_t> result;
-	std::vector<parser::token_t> result;
-	location_t loc(fname, 0, 0);
+	bool result = false;
 
+	std::fstream file;
 	file.open(fname, std::ios_base::in);
 
-	if (file.is_open() == true)
-		result = from_stream(file, loc);
-	else
-		throw syntax_error("Can't open file", loc);
+	location_t loc(fname, 0, 0);
+
+	try
+	{
+		if (file.is_open() == true)
+			result = parse(file, loc);
+		else
+			throw syntax_error("Can't open file", loc);
+	}
+	catch (syntax_error & e)
+	{
+		std::cout << e << std::endl;
+		result = false;
+	}
 
 	return (result);
 }
 
 
-#include <iostream>
-
-
-
-/*std::vector<section_t>*/ std::vector<parser::token_t>  parser::ini::from_stream(std::istream & is, location_t & loc)
+bool parser::ini::file_t::parse(std::istream & stream_to_parse)
 {
-	std::vector<token_t> tokens = tokenize_from_stream(is, loc);
+	location_t loc("", 0, 0);
+	return (parse(stream_to_parse, loc));
+}
 
-	_remove_comment(tokens);
-	_create_litteral(tokens);
 
-	std::list<std::vector<parser::token_t>> lines;
+bool parser::ini::file_t::parse(std::istream & stream_to_parse, location_t & loc)
+{
+	bool result = false;
 
-	lines = _recreate_line_and_triml(tokens);
-
-	for (auto it = lines.begin(); it != lines.end(); ++it)
+	try
 	{
-		auto section_name = __is_new_section(*it);
-		if (section_name.empty() == false)
-			std::cout << "jdfnds3jnfsq3fnj" << std::endl;
+		std::vector<token_t> tokens = tokenize_from_stream(stream_to_parse, loc);
+
+		_remove_comment(tokens);
+		_create_litteral(tokens);
+
+		std::list<std::vector<parser::token_t>> lines;
+
+		lines = _recreate_line_and_triml(tokens);
+
+		result = true;
+	}
+	catch (syntax_error & e)
+	{
+		std::cout << e << std::endl;
+		result = false;
 	}
 
-	return (tokens);
+	return (result);
+}
+
+
+
+
+parser::ini::const_proxy_section_t parser::ini::file_t::section(std::string const & sname) const
+{
+	auto found = _map.find(sname);
+	if (found != _map.cend())
+		return (const_proxy_section_t(*found));
+	return (const_proxy_section_t());
+}
+
+parser::ini::proxy_section_t parser::ini::file_t::section(std::string const & sname)
+{
+	auto found = _map.find(sname);
+	if (found != _map.end())
+		return (proxy_section_t(*found));
+	return (proxy_section_t());
+}
+
+
+
+
+bool parser::ini::file_t::add_section(std::string const & sname)
+{
+	auto found = _map.find(sname);
+	if (found != _map.end())
+		return (false);
+
+	_map.insert(section_t{sname, values_map_t()});
+	return (true);
+}
+
+bool parser::ini::file_t::del_section(std::string const & sname)
+{
+	auto found = _map.find(sname);
+	if (found != _map.end())
+	{
+		_map.erase(found);
+		return (true);
+	}
+	return (false);
+}
+
+bool parser::ini::file_t::rename_section(std::string const & old, std::string const & newname)
+{
+	auto found = _map.find(old);
+	if (found != _map.end())
+		return (false);
+
+	section_t tmp(newname, values_map_t());
+	tmp.second = std::move(found->second);
+
+	_map.erase(found);
+	_map.insert(tmp);
+	return (true);
+}
+
+
+
+
+parser::ini::file_t::sections_map_t const & parser::ini::file_t::data() const
+{
+	return (_map);
+}
+
+parser::ini::file_t::sections_map_t & parser::ini::file_t::data()
+{
+	return (_map);
+}
+
+
+
+
+/*******************************************************************************
+                                                     __  _                 __
+    ____  _________  _  ____  __     ________  _____/ /_(_)___  ____      / /_
+   / __ \/ ___/ __ \| |/_/ / / /    / ___/ _ \/ ___/ __/ / __ \/ __ \    / __/
+  / /_/ / /  / /_/ />  </ /_/ /    (__  )  __/ /__/ /_/ / /_/ / / / /   / /_
+ / .___/_/   \____/_/|_|\__, /____/____/\___/\___/\__/_/\____/_/ /_/____\__/
+/_/                    /____/_____/                               /_____/
+*******************************************************************************/
+
+
+
+
+
+
+
+
+parser::ini::proxy_section_t::proxy_section_t(file_t::section_t & s)
+: _section(&s)
+{}
+
+bool parser::ini::proxy_section_t::is_valid() const
+{
+	return (_section);
+}
+
+std::string const & parser::ini::proxy_section_t::name()
+{
+	return (_section->first);
+}
+
+
+
+
+parser::ini::const_proxy_value_t parser::ini::proxy_section_t::value(std::string const & name) const
+{
+	auto found = _section->second.find(name);
+	if (found != _section->second.cend())
+		return (const_proxy_value_t(*found));
+	return (const_proxy_value_t());
+}
+
+parser::ini::proxy_value_t parser::ini::proxy_section_t::value(std::string const & name)
+{
+	auto found = _section->second.find(name);
+	if (found != _section->second.end())
+		return (proxy_value_t(*found));
+	return (proxy_value_t());
+}
+
+
+
+
+bool parser::ini::proxy_section_t::add_value(std::string const & sname, std::string const & val)
+{
+	auto found = _section->second.find(sname);
+	if (found != _section->second.end())
+		return (false);
+
+	_section->second.insert(file_t::value_t(sname, val));
+
+	return (true);
+}
+
+bool parser::ini::proxy_section_t::del_value(std::string const & sname)
+{
+	auto found = _section->second.find(sname);
+	if (found != _section->second.end())
+	{
+		_section->second.erase(found);
+		return (true);
+	}
+
+	return (false);
+}
+
+bool parser::ini::proxy_section_t::rename_value(std::string const & old, std::string const & newname)
+{
+	auto found = _section->second.find(old);
+	if (found != _section->second.end())
+	{
+		file_t::value_t tmp(newname, std::string());
+		tmp.second = std::move(found->second);
+
+		_section->second.erase(found);
+		_section->second.insert(tmp);
+		return (true);
+	}
+	return (false);
+}
+
+
+
+
+parser::ini::file_t::values_map_t const & parser::ini::proxy_section_t::data() const
+{
+	return (_section->second);
+}
+
+parser::ini::file_t::values_map_t & parser::ini::proxy_section_t::data()
+{
+	return (_section->second);
+}
+
+
+
+
+
+
+
+
+parser::ini::const_proxy_section_t::const_proxy_section_t(file_t::section_t const & s)
+: _section(&s)
+{}
+
+bool parser::ini::const_proxy_section_t::is_valid() const
+{
+	return (_section);
+}
+
+std::string const & parser::ini::const_proxy_section_t::name()
+{
+	return (_section->first);
+}
+
+parser::ini::const_proxy_value_t parser::ini::const_proxy_section_t::value(std::string const & vname) const
+{
+	auto found = _section->second.find(vname);
+	if (found != _section->second.cend())
+		return (const_proxy_value_t(*found));
+	return (const_proxy_value_t());
+}
+
+parser::ini::file_t::values_map_t const & parser::ini::const_proxy_section_t::data() const
+{
+	return (_section->second);
+}
+
+
+
+
+
+
+
+
+/*******************************************************************************
+                                                __               __
+    ____  _________  _  ____  __   _   ______ _/ /_  _____      / /_
+   / __ \/ ___/ __ \| |/_/ / / /  | | / / __ `/ / / / / _ \    / __/
+  / /_/ / /  / /_/ />  </ /_/ /   | |/ / /_/ / / /_/ /  __/   / /_
+ / .___/_/   \____/_/|_|\__, /____|___/\__,_/_/\__,_/\___/____\__/
+/_/                    /____/_____/                     /_____/
+*******************************************************************************/
+
+
+
+
+
+
+
+
+parser::ini::proxy_value_t::proxy_value_t(file_t::value_t & v)
+: _value(&v)
+{}
+
+bool parser::ini::proxy_value_t::is_valid() const
+{
+	return (_value);
+}
+
+std::string const & parser::ini::proxy_value_t::name() const
+{
+	return (_value->first);
+}
+
+std::string const & parser::ini::proxy_value_t::value() const
+{
+	return (_value->second);
+}
+
+std::string & parser::ini::proxy_value_t::name()
+{
+	return (_value->second);
+}
+
+
+
+
+parser::ini::const_proxy_value_t::const_proxy_value_t(file_t::value_t const & v)
+: _value(&v)
+{}
+
+bool parser::ini::const_proxy_value_t::is_valid() const
+{
+	return (_value);
+}
+
+std::string const & parser::ini::const_proxy_value_t::name() const
+{
+	return (_value->first);
+}
+
+std::string const & parser::ini::const_proxy_value_t::value() const
+{
+	return (_value->second);
 }

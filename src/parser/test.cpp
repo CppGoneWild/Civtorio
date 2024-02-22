@@ -21,45 +21,8 @@ void test_syntax_error()
 
 void test_parser(std::string const & fname)
 {
-	auto print = [](std::vector<parser::token_t> const & v)
-	{
-		for (auto it = v.cbegin(); it != v.cend(); ++it)
-		{
-			std::cout << it->location() << "\t\t";
-
-			if (it->type() == parser::token_t::SEPARATOR)
-				std::cout << "SEPARATOR" << "\t";
-			else if (it->type() == parser::token_t::ALPHA_NUM)
-				std::cout << "ALPHA_NUM" << "\t";
-			else if (it->type() == parser::token_t::SPECIAL)
-				std::cout << "SPECIAL  " << "\t";
-			else if (it->type() == parser::token_t::EOL)
-				std::cout << "EOL      " << "\t";
-			else if (it->type() == parser::token_t::COMMENT)
-				std::cout << "COMMENT  " << "\t";
-			else if (it->type() == parser::token_t::LITTERAL)
-				std::cout << "LITTERAL " << "\t";
-
-
-			if (it->type() != parser::token_t::EOL)
-				std::cout << "\"" << it->token() << "\"" ;
-			std::cout << std::endl;
-		}
-	};
-
-
-
-	try
-	{
-		std::vector<parser::token_t> tmp;
-		tmp = parser::ini::from_file(fname);
-		print(tmp);
-	}
-	catch (parser::syntax_error & e)
-	{
-		std::cout << e << std::endl;
-	}
-
+	parser::ini::file_t ini_file;
+	ini_file.parse(fname);
 }
 
 
