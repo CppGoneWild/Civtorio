@@ -36,6 +36,25 @@ struct location_t
 
 
 
+struct syntax_warning
+{
+	syntax_warning()                       = default;
+	syntax_warning(syntax_warning const &) = default;
+	syntax_warning(syntax_warning &&)      = default;
+	~syntax_warning()                      = default;
+
+	syntax_warning & operator=(syntax_warning const &) = default;
+	syntax_warning & operator=(syntax_warning &&)      = default;
+
+	syntax_warning(std::string const & error_str, location_t const & location);
+	syntax_warning(std::string && error_str, location_t&& location);
+
+	location_t                location;
+	std::string               error_str;	
+};
+
+
+
 struct syntax_error
 {
 	syntax_error()                     = default;
@@ -50,6 +69,8 @@ struct syntax_error
 	syntax_error(std::string && error_str, location_t&& location);
 	syntax_error(std::string const & error_str, location_t const & location, syntax_error && inner);
 
+	syntax_error(syntax_warning const &);
+
 	location_t                location;
 	std::string               error_str;	
 
@@ -63,6 +84,7 @@ struct syntax_error
 
 
 std::ostream & operator<<(std::ostream &, parser::location_t const &);
+std::ostream & operator<<(std::ostream &, parser::syntax_warning const &);
 std::ostream & operator<<(std::ostream &, parser::syntax_error const &);
 
 

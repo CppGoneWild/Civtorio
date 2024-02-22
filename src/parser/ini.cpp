@@ -28,25 +28,6 @@
 
 
 
-static bool _is_line_empty_so_far(std::vector<parser::token_t> const & in, std::size_t end)
-{
-	if (end == 0)
-		return (true);
-
-	for (std::size_t i = end - 1; i >= 0; --i)
-	{
-		if (in[i].type() == parser::token_t::EOL)
-			return (true);
-		if (in[i].type() != parser::token_t::SEPARATOR)
-			return (false);
-	}
-
-	return (true);
-}
-
-
-
-
 static void _concatenate_double_diese(std::vector<parser::token_t> & in)
 {
 	std::vector<parser::token_t> tmp;
@@ -65,12 +46,6 @@ static void _concatenate_double_diese(std::vector<parser::token_t> & in)
 
 static void _remove_comment(std::vector<parser::token_t> & in)
 {
-	auto __append_before_token = [](parser::token_t & main, parser::token_t & t)
-	{
-		return (parser::token_t(t.token() + main.token(), main.location(), parser::token_t::COMMENT));
-	};
-
-
 	_concatenate_double_diese(in);
 
 
@@ -87,22 +62,13 @@ static void _remove_comment(std::vector<parser::token_t> & in)
 		// create comment token
 		parser::token_t comment(in[i].token(), in[i].location(), parser::token_t::COMMENT);
 
-		// concatenate all until previous EOL
-		if (_is_line_empty_so_far(in, i))
-		{
-			while (tmp.empty() == false && tmp.back().type() != parser::token_t::EOL)
-			{
-				__append_before_token(comment, tmp.back());
-				tmp.pop_back();					
-			}
-		}
-
 		++i;
 
 		// advance and concatenate until next EOL
-		for (; i < in.size() && in[i].type() != parser::token_t::EOL; ++i)
+		for (; i < in.size() /*&& in[i].type() != parser::token_t::EOL*/; ++i)
 			comment.append(in[i].token());
 
+		// std::cout << "Comment found " << comment.location() << " : '" << comment.token() << "'" << std::endl;
 		// discard comment
 		// tmp.push_back(comment);
 	}
@@ -131,21 +97,21 @@ static void _create_litteral(std::vector<parser::token_t> & in)
 
 		for (;;)
 		{
-			if (in[i].token() == "\\")
-			{
-				if (++i < in.size())
-					litt.append(in[i++]);
-				else
-					throw parser::syntax_error("Escaped sequence ill-formed ", litt.location());
-				continue;
-			}
+			// if (in[i].token() == "\\")
+			// {
+			// 	if (++i < in.size())
+			// 		litt.append(in[i++]);
+			// 	else
+			// 		throw parser::syntax_error("Escaped sequence ill-formed ", litt.location());
+			// 	continue;
+			// }
 
 			if (in[i].token() == "\"")
 				break ;
 
-			if (i >= in.size() || 
-			    in[i].type() == parser::token_t::COMMENT ||
-			    in[i].type() == parser::token_t::EOL)
+			if (i >= in.size()
+			    /*|| in[i].type() == parser::token_t::COMMENT*/
+			    /*|| in[i].type() == parser::token_t::EOL*/)
 			{
 				throw parser::syntax_error("Litteral string ill-formed ", litt.location(),
 				                           parser::syntax_error("Missing closing '\"'", in[i].location()));
@@ -162,6 +128,20 @@ static void _create_litteral(std::vector<parser::token_t> & in)
 
 
 
+
+
+
+
+static bool __is_token_escaped(std::vector<parser::token_t> const & in, std::size_t i)
+{
+	if (i == 0)
+		return (false);
+	if (in[i - 1].token() == "\\" && __is_token_escaped(in, i - 1) == false)
+		return (true);
+	return (false);
+}
+
+
 static std::list<std::vector<parser::token_t>> _recreate_line_and_triml(std::vector<parser::token_t> const & in)
 {
 	std::list<std::vector<parser::token_t>> result;
@@ -169,7 +149,7 @@ static std::list<std::vector<parser::token_t>> _recreate_line_and_triml(std::vec
 
 	for (std::size_t i = 0; i < in.size(); ++i)
 	{
-		if (in[i].type() != parser::token_t::EOL)
+		if (in[i].type() != parser::token_t::EOL || __is_token_escaped(in, i))
 		{
 			if ((in[i].type() == parser::token_t::SEPARATOR && current_line.empty()) == false)
 				current_line.emplace_back(in[i]);
@@ -184,6 +164,82 @@ static std::list<std::vector<parser::token_t>> _recreate_line_and_triml(std::vec
 	return (result);
 }
 
+
+
+
+static bool __is_new_section(std::vector<parser::token_t> const & in, std::string & result)
+{
+	std::string sname;
+	bool scope_found = false;
+	std::size_t scope_idx = 0;
+
+	for (std::size_t i = 0; i < in.size(); ++i)
+	{
+		if (in[i].token() == "[")
+		{
+			if (scope_found == true)
+				throw parser::syntax_error("Unexpected '[' token found.", in[i].location());
+			scope_found = true;
+			scope_idx = i;
+			continue;
+		}
+		
+		if (in[i].token() == "]")
+		{
+			if (scope_found == false)
+				throw parser::syntax_error("Unexpected '[' token found.", in[i].location());
+			///@warning check rest of line
+			result = sname;
+			return (true);
+		}
+		
+		if (in[i].type() == parser::token_t::SEPARATOR)
+		{
+			if (scope_found == false || sname.empty())
+				continue;
+		}
+
+		sname += in[i].token();
+	}
+
+	if (scope_found == true)
+		throw parser::syntax_error("Corresponding ']' token not found.", in[scope_idx].location());
+
+	return (false);
+}
+
+
+
+
+static bool __is_new_value(std::vector<parser::token_t> const & in,
+                           std::string & vname, std::string & vvalue)
+{
+	std::string *current_target = &vname;
+	std::size_t equal_idx = 0;
+
+	for (std::size_t i = 0; i < in.size(); ++i)
+	{
+		if (in[i].token() == "=")
+		{
+			if (current_target == &vvalue || vname.empty())
+				throw parser::syntax_error("Unexpected token '='", in[i].location());
+
+			current_target = &vvalue;
+			equal_idx = i;
+			continue;
+		}
+
+		if (in[i].type() == parser::token_t::SEPARATOR && current_target->empty())
+			continue;
+
+		*current_target += in[i].token();
+	}
+
+	if (current_target == &vvalue && vvalue.empty())
+		throw parser::syntax_error("Variable with token '=' has no value", in[equal_idx].location());
+
+	return (vname.empty() == false);
+}
 
 
 
@@ -256,17 +312,39 @@ bool parser::ini::file_t::parse(std::istream & stream_to_parse)
 bool parser::ini::file_t::parse(std::istream & stream_to_parse, location_t & loc)
 {
 	bool result = false;
+	std::string current_section_name;
 
 	try
 	{
 		std::vector<token_t> tokens = tokenize_from_stream(stream_to_parse, loc);
+		std::list<std::vector<parser::token_t>> lines = _recreate_line_and_triml(tokens);
 
-		_remove_comment(tokens);
-		_create_litteral(tokens);
+		for (auto it_line = lines.begin(); it_line != lines.end(); ++it_line)
+		{
+			_remove_comment(*it_line);
+			_create_litteral(*it_line);
+			if (__is_new_section(*it_line, current_section_name))
+			{
+				auto found = _map.find(current_section_name);
+				if (found == _map.end())
+					found = _map.insert(section_t(current_section_name, values_map_t())).first;
+				else
+					throw syntax_error("Section already declared", (*it_line)[0].location());
+			}
 
-		std::list<std::vector<parser::token_t>> lines;
+			{
+				std::string var_name, var_value;
+				if (__is_new_value(*it_line, var_name, var_value))
+				{
+					auto & tmp = _map[current_section_name];
+					auto found = tmp.find(var_name);
+					if (found != tmp.end())
+						throw syntax_error("Variable already declared", (*it_line)[0].location());
+					found = tmp.insert(value_t(var_name, var_value)).first;
+				}
+			}
+		}
 
-		lines = _recreate_line_and_triml(tokens);
 
 		result = true;
 	}

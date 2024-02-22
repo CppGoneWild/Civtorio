@@ -2,6 +2,7 @@
 
 
 
+
 /*******************************************************************************
                  __                 __  _                 __
                 / /___  _________ _/ /_(_)___  ____      / /_
@@ -35,6 +36,40 @@ parser::location_t::location_t(std::string const & f, std::size_t l, std::size_t
 std::ostream & operator<<(std::ostream & os, parser::location_t const & l)
 {
 	os << l.filename << ':' << l.line << ':' << l.column;
+	return (os);
+}
+
+
+
+/*******************************************************************************
+                      __                                          _
+    _______  ______  / /_____ __  __   _      ______ __________  (_)___  ____ _
+   / ___/ / / / __ \/ __/ __ `/ |/_/  | | /| / / __ `/ ___/ __ \/ / __ \/ __ `/
+  (__  ) /_/ / / / / /_/ /_/ />  <    | |/ |/ / /_/ / /  / / / / / / / / /_/ /
+ /____/\__, /_/ /_/\__/\__,_/_/|_|____|__/|__/\__,_/_/  /_/ /_/_/_/ /_/\__, /
+      /____/                    /_____/                               /____/
+*******************************************************************************/
+
+
+
+
+parser::syntax_warning::syntax_warning(std::string const & e,
+                                       location_t const & l)
+: location(l)
+, error_str(e)
+{}
+
+
+parser::syntax_warning::syntax_warning(std::string && e,
+                                       location_t && l)
+: location(l)
+, error_str(e)
+{}
+
+
+std::ostream & operator<<(std::ostream & os, parser::syntax_warning const & s)
+{
+	os << s.location << " :Warning: " << s.error_str << std::endl;
 	return (os);
 }
 
@@ -79,11 +114,26 @@ parser::syntax_error::syntax_error(std::string const & e,
 }
 
 
+parser::syntax_error::syntax_error(syntax_warning const & w)
+: location(w.location)
+, error_str(w.error_str)
+, inner_errors()
+{}
+
+
+
+
+
+
+
+
+
+
 
 
 static void print_orig(std::ostream & os, parser::syntax_error const & e)
 {
-	os << e.location << " : " << e.error_str << std::endl;
+	os << e.location << " : Error : " << e.error_str << std::endl;
 }
 
 static void print_from(std::ostream & os, parser::syntax_error const & e)
@@ -111,7 +161,7 @@ std::ostream & operator<<(std::ostream & os, parser::syntax_error const & s)
 	else
 	{
 		print_orig(os, s);
-  }
+	}
 
 	return (os);
 }
