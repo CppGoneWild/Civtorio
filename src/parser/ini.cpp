@@ -167,6 +167,15 @@ static std::list<std::vector<parser::token_t>> _recreate_line_and_triml(std::vec
 
 
 
+static void __trim_R(std::string & str)
+{
+	while (str.size() > 0 && (str.back() == ' ' || str.back() == '\t'))
+		str.pop_back();
+}
+
+
+
+
 static bool __is_new_section(std::vector<parser::token_t> const & in, std::string & result)
 {
 	std::string sname;
@@ -189,6 +198,7 @@ static bool __is_new_section(std::vector<parser::token_t> const & in, std::strin
 			if (scope_found == false)
 				throw parser::syntax_error("Unexpected '[' token found.", in[i].location());
 			///@warning check rest of line
+			__trim_R(sname);
 			result = sname;
 			return (true);
 		}
@@ -238,6 +248,7 @@ static bool __is_new_value(std::vector<parser::token_t> const & in,
 	if (current_target == &vvalue && vvalue.empty())
 		throw parser::syntax_error("Variable with token '=' has no value", in[equal_idx].location());
 
+	__trim_R(vname);
 	return (vname.empty() == false);
 }
 
@@ -326,10 +337,10 @@ bool parser::ini::file_t::parse(std::istream & stream_to_parse, location_t & loc
 			if (__is_new_section(*it_line, current_section_name))
 			{
 				auto found = _map.find(current_section_name);
-				if (found == _map.end())
-					found = _map.insert(section_t(current_section_name, values_map_t())).first;
-				else
+				if (found != _map.end())
 					throw syntax_error("Section already declared", (*it_line)[0].location());
+				found = _map.insert(section_t(current_section_name, values_map_t())).first;
+				continue;
 			}
 
 			{
@@ -355,6 +366,48 @@ bool parser::ini::file_t::parse(std::istream & stream_to_parse, location_t & loc
 	}
 
 	return (result);
+}
+
+
+
+
+
+bool parser::ini::file_t::write(std::string const & fname)
+{
+	bool result = false;
+
+	std::fstream file;
+	file.open(fname, std::ios_base::out);
+
+	if (file.is_open() == true)
+		result = write(file);
+
+	return (result);
+}
+
+
+
+
+bool parser::ini::file_t::write(std::ostream & os)
+{
+	for (auto it_sec = _map.cbegin();
+	          it_sec != _map.cend();
+	          ++it_sec)
+	{
+		if (it_sec->first.empty() == false)
+			os << "[" << it_sec->first << "]" << std::endl;
+
+		for (auto it_var = it_sec->second.cbegin();
+		          it_var != it_sec->second.cend();
+		          ++it_var)
+		{
+			if (it_sec->first.empty() == false)
+				os << "\t";
+			os << it_var->first << "=" << it_var->second << std::endl;
+		}
+	}
+
+	return (true);
 }
 
 

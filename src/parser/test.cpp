@@ -24,18 +24,7 @@ void test_parser(std::string const & fname)
 	parser::ini::file_t ini_file;
 	ini_file.parse(fname);
 
-
-	for (auto it_sec = ini_file.data().begin();
-	          it_sec != ini_file.data().end();
-	          ++it_sec)
-	{
-		for (auto it_var = it_sec->second.begin();
-		          it_var != it_sec->second.end();
-		          ++it_var)
-		{
-			std::cout << "[" << it_sec->first << "]\t" << it_var->first << "\t=\t" << it_var->second << std::endl;
-		}
-	}
+	ini_file.write(std::cout);
 }
 
 

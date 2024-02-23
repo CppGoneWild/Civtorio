@@ -68,6 +68,9 @@ public:
 	bool parse(std::istream & stream_to_parse);
 	bool parse(std::istream & stream_to_parse, location_t & loc);
 
+	bool write(std::string const &);
+	bool write(std::ostream &);
+
 	const_proxy_section_t section(std::string const &) const;
 	proxy_section_t section(std::string const &);
 
