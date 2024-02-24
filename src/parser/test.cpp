@@ -1,6 +1,7 @@
 #include "token.hh"
 
 #include "ini.hh"
+#include "json.hh"
 
 #include <iostream>
 
@@ -19,12 +20,29 @@ void test_syntax_error()
 
 
 
-void test_parser(std::string const & fname)
+void test_parser_ini(std::string const & fname)
 {
 	parser::ini::file_t ini_file;
 	ini_file.parse(fname);
 
 	ini_file.write(std::cout);
+}
+
+
+
+void test_parser_json(std::string const & fname)
+{
+	parser::json::element_t * elem = nullptr;
+
+	if (parser::json::from_file(fname, &elem))
+	{
+		// ini_file.write(std::cout);
+		std::cout << "OK" << std::endl;
+
+		delete elem;
+		return ;
+	}
+	std::cout << "KO" << std::endl;
 }
 
 
@@ -36,15 +54,19 @@ void test_parser(std::string const & fname)
 
 int main()
 {
-	test_syntax_error();
+//	test_syntax_error();
 
-	std::cout << std::endl << std::endl << std::endl << std::endl;
+//	std::cout << std::endl << std::endl << std::endl << std::endl;
 
-	test_parser("testfile2.ini");
+//	test_parser_ini("testfile2.ini");
 
-	std::cout << std::endl << std::endl << std::endl << std::endl;
+//	std::cout << std::endl << std::endl << std::endl << std::endl;
 
-	test_parser("testfile.ini");
+//	test_parser_ini("testfile.ini");
+
+//	std::cout << std::endl << std::endl << std::endl << std::endl;
+
+	test_parser_json("testfile.json");
 
   return (0);
 }

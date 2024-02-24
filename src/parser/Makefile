@@ -4,6 +4,7 @@ NAME_TEST = test.out
 SRC_TEST  = types.cpp \
             token.cpp \
             ini.cpp \
+            json.cpp \
             \
             test.cpp
 OBJ_TEST  = $(SRC_TEST:.cpp=.o)
