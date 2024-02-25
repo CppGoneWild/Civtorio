@@ -540,8 +540,6 @@ void parser::json::object_t::add_members(member_t & m)
 		return (lm.name() == m.name());
 	};
 
-	std::cout << "Try to add '" << m.name().value() << "'" << std::endl;
-
 	auto found = std::find_if(_members.cbegin(), _members.cend(), unary_pred);
 	if (found != _members.cend())
 		throw syntax_error("Member already declared.", location_t());
@@ -730,22 +728,28 @@ parser::json::element_t * is_object(std::vector<parser::token_t> & in, std::size
 	parser::location_t start_loc = in[i].location();
 	++i;
 
-
 	while (i < in.size())
 	{
+		parser::location_t previous_loc = in[i].location();
 		parser::json::element_t * tmp = is_member_or_string(in, i);
 
 		if (tmp != nullptr)
 		{
+			if (tmp->type() != parser::json::element_t::MEMBER)
+			{
+				delete tmp;
+				throw parser::syntax_error("Must be a member.", previous_loc);
+			}
+
 			try
 			{
-				result->add_members(*dynamic_cast<parser::json::member_t*>(tmp));
+					result->add_members(*dynamic_cast<parser::json::member_t*>(tmp));
 			}
 			catch (parser::syntax_error & e)
 			{
 				delete tmp;
-				throw parser::syntax_error("Member already declared", in[i].location());
-			}
+				throw parser::syntax_error("In object declared at", start_loc, std::move(e));
+			}				
 			delete tmp;
 		}
 		else if (in[i].token() == "}" && in[i].type() != parser::token_t::LITTERAL)
@@ -831,13 +835,6 @@ parser::json::element_t * is_member_or_string(std::vector<parser::token_t> & in,
 			break;
 		if (in[i].token() == ":" && in[i].type() != parser::token_t::LITTERAL)
 		{
-			{
-				std::cout << "member name :'";
-				for (int a = 0; a < name.size(); ++a)
-					std::cout << name[a].token();
-				std::cout << "'" << std::endl;
-			}
-
 			if (name.empty())
 				throw parser::syntax_error("Unexpected token ':'. Member must have a name.", in[i].location());
 
@@ -867,8 +864,6 @@ parser::json::element_t * is_member_or_string(std::vector<parser::token_t> & in,
 
 	if (elem == nullptr)
 		return (new parser::json::string_t(sname));
-
-	std::cout << "member name :'" << sname.value() << "'" << std::endl;
 
 	parser::json::member_t * mmember = new parser::json::member_t(sname, sname.location());
 	mmember->set_value(elem);

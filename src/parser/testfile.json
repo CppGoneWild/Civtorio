@@ -1,5 +1,5 @@
-{
+test : {
 	val:value,
 	val2:value2,
-	/*val3:*/[ val, val1, val2 ]
+	val3:[ val, val1, val2 ]
 }
